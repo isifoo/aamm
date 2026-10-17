@@ -288,6 +288,7 @@ dialog.dlg::backdrop{background:transparent}
   <select id="tagSel" class="tsel"><option value="">All tags</option></select>
   <select id="catSel" class="tsel"><option value="">All categories</option></select>
   <button class="btn" id="catQuick" title="Rename, recolor, reorder, add or delete categories">Categories</button>
+  <button class="btn" id="stQuick" title="Rename, recolor, reorder, add or delete statuses">Statuses</button>
   <select id="priSel" class="tsel"><option value="">All priorities</option></select>
   <span id="colWrap"><button class="btn" id="colBtn">Columns</button><div id="colMenu" class="hidden"></div></span>
   <span id="tlZoom" class="seg hidden"><button data-z="-1">&minus;</button><button data-z="1">+</button></span>
@@ -329,6 +330,14 @@ dialog.dlg::backdrop{background:transparent}
   <p style="color:var(--dim);font-size:12px">Shortcuts: <b>N</b> new project, <b>/</b> search, <b>Esc</b> close.</p>
 </div></div>
 
+<!-- statuses -->
+<div id="stModal" class="modal hidden"><div class="mbox" style="max-width:660px">
+  <h2>Statuses</h2>
+  <p style="color:var(--dim);font-size:12px;margin-top:0">Rename, recolor or reorder your statuses. The order matters: statuses at the top sort first, so keep your best at the top and your worst at the bottom. "Idea / Planned" is the fallback and cannot be deleted. Changes sync to your other browsers.</p>
+  <div id="stList"></div>
+  <div class="mfoot"><button class="btn" id="stAdd">+ Add status</button><span class="spacer"></span><button class="btn" id="stReset">Reset to defaults</button><button class="btn primary" id="stClose">Done</button></div>
+</div></div>
+
 <!-- categories -->
 <div id="catModal" class="modal hidden"><div class="mbox" style="max-width:660px">
   <h2>Categories</h2>
@@ -360,7 +369,7 @@ dialog.dlg::backdrop{background:transparent}
 <div id="toast" class="hidden"></div>
 
 <script>
-const APP_VERSION='v15';
+const APP_VERSION='v16';
 const FB_CFG={
   apiKey:"AIzaSyAtG1gnSkQ3rMA3umOg1BtEX_tvkcubjso",
   authDomain:"aamm-ab017.firebaseapp.com",
@@ -374,7 +383,7 @@ const DB_PATH='aamm/projects';
 const LS_KEY='aamm.v1', PREF_KEY='aamm.prefs';
 
 /* Statuses: lower rank = higher in the list. Edit freely. */
-const STATUSES=[
+const DEFAULT_STATUSES=[
   {id:'star',    label:'Great / Useful',  icon:'⭐', color:'#ffcb00', rank:0},
   {id:'good',    label:'Good',            icon:'✅', color:'#00c875', rank:1},
   {id:'wip',     label:'In progress',     icon:'🛠', color:'#fdab3d', rank:2},
@@ -384,7 +393,12 @@ const STATUSES=[
   {id:'broken',  label:'Broken',          icon:'❌', color:'#e2445c', rank:6},
   {id:'archived',label:'Abandoned',       icon:'🗑', color:'#797e93', rank:7}
 ];
-const ST=Object.fromEntries(STATUSES.map(s=>[s.id,s]));
+const cleanStatuses=a=>a.filter(s=>s&&s.id&&s.label).map(s=>({id:String(s.id),label:String(s.label),icon:String(s.icon||''),color:String(s.color||'#797e93'),rank:0}));
+let STATUSES=(()=>{try{const v=JSON.parse(localStorage.getItem('aamm.statuses'));if(Array.isArray(v)){const c=cleanStatuses(v);if(c.some(s=>s.id==='idea'))return c;}}catch(e){}return cleanStatuses(DEFAULT_STATUSES);})();
+let ST={};
+function rebuildST(){STATUSES.forEach((s,i)=>s.rank=i);ST=Object.fromEntries(STATUSES.map(s=>[s.id,s]));}
+rebuildST();
+function saveStatusesLocal(){try{localStorage.setItem('aamm.statuses',JSON.stringify(STATUSES.map(({id,label,icon,color})=>({id,label,icon,color}))));}catch(e){}}
 const PRI=[{label:'No priority',color:'#6b7080'},{label:'P1 Critical',color:'#e2445c'},{label:'P2 High',color:'#ff9f43'},{label:'P3 Medium',color:'#579bfc'},{label:'P4 Low',color:'#9aa3b5'}];
 const KINDS={task:{label:'task',color:'#579bfc'},bug:{label:'bug',color:'#e2445c'},idea:{label:'idea',color:'#a25ddc'}};
 const LANES=[{id:'now',label:'Now',color:'#fdab3d'},{id:'next',label:'Next',color:'#579bfc'},{id:'later',label:'Later',color:'#a25ddc'},{id:'done',label:'Done',color:'#00c875'}];
@@ -474,7 +488,7 @@ function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(projects));}
 function savePrefs(){try{localStorage.setItem(PREF_KEY,JSON.stringify(prefs));}catch(e){}}
 /* Shared across browsers (stored in Firebase at aamm/settings): group order and hidden table columns.
    Everything else (view, theme, filters, search) stays per browser. */
-function pushShared(){ if(authed&&sref)sref.set({order:prefs.order||{},hide:prefs.hide||{},cats:cats}).catch(e=>toast('Settings sync failed: '+e.message)); }
+function pushShared(){ if(authed&&sref)sref.set({order:prefs.order||{},hide:prefs.hide||{},cats:cats,statuses:STATUSES.map(({id,label,icon,color})=>({id,label,icon,color}))}).catch(e=>toast('Settings sync failed: '+e.message)); }
 function saveShared(){ savePrefs(); pushShared(); }
 function toast(m,ms){const t=$('toast');t.textContent=m;t.classList.remove('hidden');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.add('hidden'),ms||(m.length>70?7000:1800));}
 
@@ -518,9 +532,9 @@ async function initFirebase(){
         sref.on('value',snap=>{
           const v=snap.val();
           if(v){
-            const o=v.order||{}, hd=v.hide||{}, cs=(v.cats&&v.cats.length)?v.cats:null;
-            if(!cs&&!sharedPushed){sharedPushed=true;pushShared();}
-            if(JSON.stringify(o)!==JSON.stringify(prefs.order||{})||JSON.stringify(hd)!==JSON.stringify(prefs.hide||{})||(cs&&JSON.stringify(cs)!==JSON.stringify(cats))){prefs.order=o;prefs.hide=hd;if(cs){cats=cs;saveCatsLocal();}savePrefs();render();}
+            const o=v.order||{}, hd=v.hide||{}, cs=(v.cats&&v.cats.length)?v.cats:null, ss=(v.statuses&&v.statuses.length)?cleanStatuses(v.statuses):null;
+            if((!cs||!ss)&&!sharedPushed){sharedPushed=true;pushShared();}
+            if(JSON.stringify(o)!==JSON.stringify(prefs.order||{})||JSON.stringify(hd)!==JSON.stringify(prefs.hide||{})||(cs&&JSON.stringify(cs)!==JSON.stringify(cats))||(ss&&JSON.stringify(ss.map(({id,label,icon,color})=>({id,label,icon,color})))!==JSON.stringify(STATUSES.map(({id,label,icon,color})=>({id,label,icon,color}))))){prefs.order=o;prefs.hide=hd;if(cs){cats=cs;saveCatsLocal();}if(ss&&ss.some(s=>s.id==='idea')){STATUSES=ss;rebuildST();saveStatusesLocal();}savePrefs();render();}
           }else if(!sharedPushed){sharedPushed=true;pushShared();}
         },()=>{});
         ref.on('value',snap=>{
@@ -610,6 +624,7 @@ function render(){
   $('tagSel').innerHTML='<option value="">All tags</option>'+tags.map(t=>`<option ${t===prefs.tag?'selected':''}>${esc(t)}</option>`).join('');
   $('priSel').innerHTML='<option value="">All priorities</option>'+PRI.map((x,i)=>`<option value="${i}" ${String(i)===String(prefs.pri)?'selected':''}>${esc(x.label)}</option>`).join('');
   $('catSel').innerHTML=catOptions();
+  $('bulkStatus').innerHTML=bulkOpts();
   const list=visible();
   $('count').textContent=list.length+' / '+Object.keys(projects).length;
   [...sel].forEach(id=>{if(!projects[id])sel.delete(id);});
@@ -1170,6 +1185,50 @@ function newCategoryFor(p){
   catPick=cats.indexOf(c); renderCats(); $('catModal').classList.remove('hidden');   // pick its icon and color right away
 }
 $('catQuick').onclick=()=>$('catBtn').click();
+
+/* ---------- status manager ---------- */
+const bulkOpts=()=>'<option value="">Set status…</option>'+STATUSES.map(s=>`<option value="${s.id}">${s.icon} ${esc(s.label)}</option>`).join('');
+let stT=null;
+function saveStatuses(){rebuildST();saveStatusesLocal();pushShared();render();}
+function saveStatusesSoon(){clearTimeout(stT);stT=setTimeout(saveStatuses,400);}
+function renderStatuses(){
+  $('stList').innerHTML=STATUSES.map((s,i)=>`<div class="catrow" data-i="${i}">
+      <input class="rowin" data-k="icon" value="${esc(s.icon)}" maxlength="4" style="width:56px;flex:none;text-align:center" title="Emoji or symbol">
+      <input class="rowin" data-k="label" value="${esc(s.label)}">
+      <input type="color" data-k="color" value="${s.color}">
+      <button class="btn" data-a="up" title="Move up (higher in lists)">▲</button><button class="btn" data-a="down" title="Move down (lower in lists)">▼</button>
+      ${s.id==='idea'?'<span style="width:38px" title="This is the fallback status and cannot be deleted"></span>':'<button class="btn danger" data-a="del" title="Delete">✕</button>'}
+    </div>`).join('');
+}
+$('stList').addEventListener('input',e=>{
+  const r=e.target.closest('.catrow'); if(!r||!e.target.dataset.k)return;
+  STATUSES[+r.dataset.i][e.target.dataset.k]=e.target.value; saveStatusesSoon();
+});
+$('stList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]'); if(!b)return;
+  const r=b.closest('.catrow'); if(!r)return;
+  const i=+r.dataset.i, a=b.dataset.a;
+  if(a==='up'&&i>0){[STATUSES[i-1],STATUSES[i]]=[STATUSES[i],STATUSES[i-1]];saveStatuses();}
+  else if(a==='down'&&i<STATUSES.length-1){[STATUSES[i+1],STATUSES[i]]=[STATUSES[i],STATUSES[i+1]];saveStatuses();}
+  else if(a==='del'){
+    const s=STATUSES[i];
+    if(confirm('Delete "'+s.label+'"? Projects with this status will become "'+ST.idea.label+'".')){
+      Object.values(projects).filter(p=>p.status===s.id).forEach(p=>{p.status='idea';putProject(p);});
+      STATUSES.splice(i,1); saveStatuses();
+    }
+  }
+  renderStatuses();
+});
+$('stAdd').onclick=()=>{STATUSES.push({id:uid(),label:'New status',icon:'🔹',color:'#579bfc',rank:0});saveStatuses();renderStatuses();};
+$('stReset').onclick=()=>{
+  if(!confirm('Reset statuses to the defaults?'))return;
+  STATUSES=cleanStatuses(DEFAULT_STATUSES); saveStatuses();
+  const ids=new Set(STATUSES.map(s=>s.id));
+  Object.values(projects).filter(p=>!ids.has(p.status)).forEach(p=>{p.status='idea';putProject(p);});
+  renderStatuses();
+};
+$('stClose').onclick=()=>{$('stModal').classList.add('hidden'); if(curId&&projects[curId])openDlg(curId);};
+$('stQuick').onclick=()=>{renderStatuses();$('stModal').classList.remove('hidden');};
 
 /* ---------- category manager ---------- */
 let catPick=-1, catT=null;
