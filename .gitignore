@@ -1,0 +1,5 @@
+# Publish only the app itself. Everything else in this folder stays local.
+*
+!index.html
+!README.md
+!.gitignore
