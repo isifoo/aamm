@@ -287,6 +287,7 @@ dialog.dlg::backdrop{background:transparent}
   </select>
   <select id="tagSel" class="tsel"><option value="">All tags</option></select>
   <select id="catSel" class="tsel"><option value="">All categories</option></select>
+  <button class="btn" id="catQuick" title="Rename, recolor, reorder, add or delete categories">Categories</button>
   <select id="priSel" class="tsel"><option value="">All priorities</option></select>
   <span id="colWrap"><button class="btn" id="colBtn">Columns</button><div id="colMenu" class="hidden"></div></span>
   <span id="tlZoom" class="seg hidden"><button data-z="-1">&minus;</button><button data-z="1">+</button></span>
@@ -359,7 +360,7 @@ dialog.dlg::backdrop{background:transparent}
 <div id="toast" class="hidden"></div>
 
 <script>
-const APP_VERSION='v12';
+const APP_VERSION='v15';
 const FB_CFG={
   apiKey:"AIzaSyAtG1gnSkQ3rMA3umOg1BtEX_tvkcubjso",
   authDomain:"aamm-ab017.firebaseapp.com",
@@ -440,9 +441,9 @@ const catById=id=>cats.find(c=>c.id===id)||cats.find(c=>c.id==='other')||cats[ca
 const catIcon=(p,size)=>{const c=catById(p.category);return svgIcon(c.icon,c.color,size||20);};
 const catOpts=(sel)=>cats.map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${esc(x.name)}</option>`).join('');
 const catOptions=()=>'<option value="">All categories</option>'+cats.map(c=>`<option value="${c.id}" ${c.id===prefs.cat?'selected':''}>${esc(c.name)}</option>`).join('');
-function catCell(p){const c=catById(p.category);return `<td class="pc"><select class="pill" data-act="category" style="background:${c.color};color:#fff">${catOpts(c.id)}</select></td>`;}
-function catHead(p){const c=catById(p.category);return `<span class="dicon">${svgIcon(c.icon,c.color,26)}</span><select class="pill" id="hCat" data-f="category" style="background:${c.color};color:#fff">${catOpts(c.id)}</select>`;}
-function catHeadPaint(p){const c=catById(p.category),i=document.querySelector('#dlgIn .dicon'),s=$('hCat');if(i)i.innerHTML=svgIcon(c.icon,c.color,26);if(s)s.style.background=c.color;}
+function catCell(p){const c=catById(p.category);return `<td class="pc"><select class="pill" data-act="category" style="background:${c.color};color:#fff">${catOptsNew(c.id)}</select></td>`;}
+function catHead(p){const c=catById(p.category);return `<span class="dicon">${svgIcon(c.icon,c.color,26)}</span><select class="pill" id="hCat" data-f="category" style="background:${c.color};color:#fff">${catOptsNew(c.id)}</select>`;}
+function catHeadPaint(p){const c=catById(p.category),i=document.querySelector('#dlgIn .dicon'),s=$('hCat');if(i)i.innerHTML=svgIcon(c.icon,c.color,26);if(s){s.innerHTML=catOptsNew(c.id);s.style.background=c.color;}}
 
 const COLS=[['status','Status'],['category','Category'],['priority','Priority'],['next','Next step'],['tasks','Tasks'],['due','Due'],['tags','Tags'],['links','Links']];
 
@@ -761,7 +762,7 @@ $('grid').addEventListener('change',e=>{
   if(a==='sel'){e.target.checked?sel.add(p.id):sel.delete(p.id);row.classList.toggle('selrow',e.target.checked);updateBulk();return;}
   if(a==='status')changeStatus(p,e.target.value);
   else if(a==='priority')changePriority(p,e.target.value);
-  else if(a==='category')p.category=e.target.value;
+  else if(a==='category'){ if(e.target.value==='__new'){newCategoryFor(p);return;} p.category=e.target.value; }
   else if(a==='due')p.due=e.target.value;
   else if(a==='next')p.nextStep=e.target.value.trim();
   else if(a==='nexttask'){const t=(p.tasks||[]).find(t=>!t.done); if(t)t.done=true;}
@@ -1006,7 +1007,7 @@ function onField(e){
   const v=readVal(el);
   if(f==='status'){changeStatus(p,v);paintHead(p);repaint('updates');}
   else if(f==='priority'){changePriority(p,v);paintHead(p);repaint('updates');}
-  else if(f==='category'){p.category=v;catHeadPaint(p);}
+  else if(f==='category'){ if(v==='__new'){newCategoryFor(p);return;} p.category=v;catHeadPaint(p); }
   else p[f]=v;
   if(f==='url'){const o=$('dOpen');if(o){o.href=safeUrl(v);o.style.display=v?'':'none';}}
   queueSave();
@@ -1154,9 +1155,25 @@ $('diagCopy').onclick=()=>copyText(diagLines.join('\n')||'(run diagnostics first
 $('pushBtn').onclick=()=>{ if(!ref||!authed)return toast('Not signed in to the cloud'); const n=Object.keys(projects).length; ref.set(JSON.parse(JSON.stringify(projects))).then(()=>toast('Pushed '+n+' projects to the cloud')).catch(e=>toast('Push failed: '+e.message)); };
 $('pullBtn').onclick=()=>{ if(!ref||!authed)return toast('Not signed in to the cloud'); ref.get().then(s=>{ if(!s.exists())return toast('Cloud is empty - nothing to load'); projects=s.val(); saveLocal(); render(); toast('Loaded '+Object.keys(projects).length+' projects from the cloud'); }).catch(e=>toast('Load failed: '+e.message)); };
 
+/* ---------- quick "new category" from any category dropdown ---------- */
+const catOptsNew=sel=>catOpts(sel)+'<option value="__new">＋ New category…</option>';
+function newCategoryFor(p){
+  const name=(prompt('Name for the new category:')||'').trim();
+  const s=$('hCat');
+  if(!name){ if(s&&p)s.value=catById(p.category).id; render(); return; }
+  const c={id:uid(),name,icon:'folder',color:'#579bfc'};
+  cats.splice(Math.max(0,cats.length-1),0,c);
+  if(p)p.category=c.id;
+  saveCatsLocal(); pushShared();
+  if(p)putProject(p); else render();
+  if(p)catHeadPaint(p);
+  catPick=cats.indexOf(c); renderCats(); $('catModal').classList.remove('hidden');   // pick its icon and color right away
+}
+$('catQuick').onclick=()=>$('catBtn').click();
+
 /* ---------- category manager ---------- */
 let catPick=-1, catT=null;
-function saveCats(){saveCatsLocal();pushShared();render();}
+function saveCats(){saveCatsLocal();pushShared();render();if(curId&&projects[curId])catHeadPaint(projects[curId]);}
 function saveCatsSoon(){clearTimeout(catT);catT=setTimeout(saveCats,400);}
 function renderCats(){
   $('catList').innerHTML=cats.map((c,i)=>`<div class="catrow" data-i="${i}">
