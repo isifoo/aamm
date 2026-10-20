@@ -331,6 +331,7 @@ dialog.dlg::backdrop{background:transparent}
   <p style="color:var(--dim);font-size:12px">Import merges by id: fields in the file replace those fields on the existing project, other fields are kept. Data lives in Firebase at <code>aamm/projects</code> and is cached on this device.</p>
   <div class="mfoot" style="flex-wrap:wrap;margin:10px 0"><button class="btn" id="diagBtn">Run diagnostics</button><button class="btn" id="diagCopy">Copy report</button><button class="btn" id="pushBtn">Push local → cloud</button><button class="btn" id="pullBtn">Load from cloud</button></div>
   <pre id="diagOut" style="white-space:pre-wrap;font-size:11px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;max-height:280px;overflow:auto;display:none"></pre>
+  <p style="color:var(--dim);font-size:12px"><b>Open folders in Explorer:</b> on your PC, double-click <code>folder-opener\Install-FolderOpener.bat</code> (in the AllAppsMindMap folder) once. After that the folder icons open Explorer. Without it they just copy the path.</p>
   <p style="color:var(--dim);font-size:12px">Shortcuts: <b>N</b> new project, <b>/</b> search, <b>Esc</b> close.</p>
 </div></div>
 
@@ -373,7 +374,7 @@ dialog.dlg::backdrop{background:transparent}
 <div id="toast" class="hidden"></div>
 
 <script>
-const APP_VERSION='v18';
+const APP_VERSION='v20';
 const FB_CFG={
   apiKey:"AIzaSyAtG1gnSkQ3rMA3umOg1BtEX_tvkcubjso",
   authDomain:"aamm-ab017.firebaseapp.com",
@@ -774,7 +775,7 @@ $('grid').addEventListener('click',e=>{
     if(a==='edit'){try{openDlg(p.id,row);}catch(err){toast('Could not open popup: '+err.message);console.error(err);}}
     else if(a==='pin'){p.pinned=!p.pinned;putProject(p);}
     else if(a==='tag'){prefs.tag=act.dataset.tag;savePrefs();render();}
-    else if(a==='folder')copyText(p.folder,'Folder path copied - paste into Explorer');
+    else if(a==='folder')openFolder(p.folder);
     return;
   }
   if(row&&!e.target.closest('a,button,select,input,label,textarea')){try{openDlg(row.dataset.id,row);}catch(err){toast('Could not open popup: '+err.message);console.error(err);}}
@@ -804,7 +805,29 @@ $('grid').addEventListener('keydown',e=>{
   putProject(p);
   setTimeout(()=>{const i=[...document.querySelectorAll('.addinp')].find(x=>x.dataset.gt===t&&x.dataset.gk===k); if(i)i.focus();});
 });
-function copyText(t,msg){navigator.clipboard.writeText(t).then(()=>toast(msg),()=>prompt('Copy:',t));}
+function copyText(t,msg){
+  const ok=()=>toast(msg);
+  const fallback=()=>{
+    try{
+      const ta=document.createElement('textarea'); ta.value=t; ta.style.cssText='position:fixed;opacity:0;left:-9999px';
+      document.body.appendChild(ta); ta.select(); const done=document.execCommand('copy'); ta.remove();
+      if(done)ok(); else prompt('Copy:',t);
+    }catch(e){prompt('Copy:',t);}
+  };
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,fallback);
+    else fallback();
+  }catch(e){fallback();}
+}
+/* Opens Explorer through the optional Windows helper (folder-opener/Install-FolderOpener.bat). A web page cannot
+   open folders itself, so the path is also copied (quietly, never blocking the open) in case the helper is not installed. */
+function openFolder(path){
+  if(!path)return;
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(path).catch(()=>{}); }catch(e){}
+  toast('Opening folder... (path copied too, in case Explorer does not open)');
+  const a=document.createElement('a'); a.href='aamm-folder://open?p='+encodeURIComponent(path);
+  document.body.appendChild(a); a.click(); a.remove();
+}
 
 /* ---------- drag: cards between columns, and group reordering ---------- */
 let drag=null;
@@ -934,7 +957,7 @@ function pLinks(p){
   ${fld('Claude session link','claude',p.claude,'placeholder="claude://claude.ai/epitaxy/local_..."')}
   ${claudeList(p)}
   ${fld('Repo link','repo',p.repo,'placeholder="https://github.com/..."')}
-  <label class="f"><span>Folder path</span><div class="trow"><input class="rowin" data-f="folder" value="${esc(p.folder||'')}"><button class="btn" data-a="copy-folder">Copy</button></div></label>
+  <label class="f"><span>Folder path</span><div class="trow"><input class="rowin" data-f="folder" value="${esc(p.folder||'')}"><button class="btn" data-a="open-folder">Open</button><button class="btn" data-a="copy-folder">Copy</button></div></label>
   ${fld('Or use an image URL instead','cover',(p.cover&&p.cover.startsWith('data:'))?'':(p.cover||''),'placeholder="https://..."')}
   <div class="f"><span>More links</span>
   ${lk.map((l,i)=>`<div class="trow"><input class="rowin" style="max-width:130px" data-l="links" data-i="${i}" data-k="label" value="${esc(l.label)}" placeholder="Label"><input class="rowin" data-l="links" data-i="${i}" data-k="url" value="${esc(l.url)}" placeholder="https://..."><a class="btn" href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener">↗</a><button class="btn" data-a="lk-del" data-i="${i}">✕</button></div>`).join('')}
@@ -1082,6 +1105,7 @@ $('dlgIn').addEventListener('click',e=>{
     case 'up-del':p.updates.splice(i,1);queueSave();repaint('updates');break;
     case 'lk-add':(p.links=p.links||[]).push({label:'',url:''});queueSave();repaint('links');break;
     case 'lk-del':p.links.splice(i,1);queueSave();repaint('links');break;
+    case 'open-folder':openFolder(p.folder);break;
     case 'copy-folder':copyText(p.folder||'','Folder path copied');break;
   }
 });
