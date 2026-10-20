@@ -259,6 +259,8 @@ dialog.dlg::backdrop{background:transparent}
 .icon svg{display:block}
 .ico svg{vertical-align:-4px}
 .dh .dicon{display:flex;align-items:center;justify-content:center;width:46px;height:46px;padding:0}
+.crow{flex-wrap:wrap}
+.crow .btn{flex:1 1 calc(50% - 6px)}
 </style>
 </head>
 <body>
@@ -369,7 +371,7 @@ dialog.dlg::backdrop{background:transparent}
 <div id="toast" class="hidden"></div>
 
 <script>
-const APP_VERSION='v16';
+const APP_VERSION='v17';
 const FB_CFG={
   apiKey:"AIzaSyAtG1gnSkQ3rMA3umOg1BtEX_tvkcubjso",
   authDomain:"aamm-ab017.firebaseapp.com",
@@ -464,7 +466,7 @@ const COLS=[['status','Status'],['category','Category'],['priority','Priority'],
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const safeUrl=u=>{u=(u||'').trim(); if(!u)return ''; if(/^(https?:|file:|mailto:)/i.test(u))return u; if(/^[a-z]:[\\/]/i.test(u))return 'file:///'+u.replace(/\\/g,'/'); return 'https://'+u;};
+const safeUrl=u=>{u=(u||'').trim(); if(!u)return ''; if(/^(https?:|file:|mailto:|claude:)/i.test(u))return u; if(/^[a-z]:[\\/]/i.test(u))return 'file:///'+u.replace(/\\/g,'/'); return 'https://'+u;};
 const today=()=>new Date().toISOString().slice(0,10);
 const DAY=86400000;
 const dn=s=>Math.floor(Date.parse(s+'T00:00:00Z')/DAY);
@@ -658,7 +660,7 @@ function tableHTML(items,g){
       tasks:`<td class="tkc">${tk.length?`<div class="prog" style="--c:#00c875"><i style="width:${done/tk.length*100}%"></i></div><span class="n">${done}/${tk.length}${bg?` · 🐛${bg}`:''}</span>`:''}</td>`,
       due:`<td><input type="date" data-act="due" value="${esc(p.due||'')}" ${p.due&&p.due<today()?'style="color:#e2445c;font-weight:600"':''}></td>`,
       tags:`<td>${(p.tags||[]).map(t=>`<span class="tag" data-act="tag" data-tag="${esc(t)}">${esc(t)}</span>`).join(' ')}</td>`,
-      links:`<td style="white-space:nowrap">${u?`<a class="btn tbtn" href="${esc(u)}" target="_blank" rel="noopener">🔗</a> `:''}${p.folder?`<button class="btn tbtn" data-act="folder" title="${esc(p.folder)}">📁</button> `:''}${r?`<a class="btn tbtn" href="${esc(r)}" target="_blank" rel="noopener">Repo</a>`:''}</td>`
+      links:`<td style="white-space:nowrap">${claudeBtn(p,'btn tbtn','✦ Claude')} ${u?`<a class="btn tbtn" href="${esc(u)}" target="_blank" rel="noopener">🔗</a> `:''}${p.folder?`<button class="btn tbtn" data-act="folder" title="${esc(p.folder)}">📁</button> `:''}${r?`<a class="btn tbtn" href="${esc(r)}" target="_blank" rel="noopener">Repo</a>`:''}</td>`
     };
     return `<tr data-id="${esc(p.id)}" class="${isel?'selrow':''}" style="--c:${s.color}">
       <td class="ck"><input type="checkbox" data-act="sel" ${isel?'checked':''}></td>
@@ -692,8 +694,9 @@ function card(p,drag){
     ${(p.tags||[]).length?`<div class="tags">${p.tags.map(t=>`<span class="tag" data-act="tag" data-tag="${esc(t)}">${esc(t)}</span>`).join('')}</div>`:''}
     <select class="stat" data-act="status">${STATUSES.map(x=>`<option value="${x.id}" ${x.id===p.status?'selected':''}>${x.icon} ${esc(x.label)}</option>`).join('')}</select>
     <div class="crow">
-      <a class="btn ${u?'':'dis'}" href="${esc(u)}" target="_blank" rel="noopener">🔗 Open</a>
+      <a class="btn ${u?'':'dis'}" href="${esc(u)}" target="_blank" rel="noopener">🌐 Website</a>
       <button class="btn ${p.folder?'':'dis'}" data-act="folder" title="${esc(p.folder||'')}">📁 Folder</button>
+      ${claudeBtn(p,'btn','✦ Claude')}
       ${r?`<a class="btn" href="${esc(r)}" target="_blank" rel="noopener">Repo</a>`:''}
     </div>
     <div class="meta"><span>${esc(p.tech||'')}</span><span>${p.updated?new Date(p.updated).toLocaleDateString():''}</span></div>
@@ -921,6 +924,8 @@ function pUpdates(p){
 function pLinks(p){
   const lk=p.links||[];
   return `${fld('Project link (live app / main URL)','url',p.url,'placeholder="https://..."')}
+  ${fld('Claude session link','claude',p.claude,'placeholder="claude://claude.ai/epitaxy/local_..."')}
+  ${claudeList(p)}
   ${fld('Repo link','repo',p.repo,'placeholder="https://github.com/..."')}
   <label class="f"><span>Folder path</span><div class="trow"><input class="rowin" data-f="folder" value="${esc(p.folder||'')}"><button class="btn" data-a="copy-folder">Copy</button></div></label>
   ${fld('Or use an image URL instead','cover',(p.cover&&p.cover.startsWith('data:'))?'':(p.cover||''),'placeholder="https://..."')}
@@ -1185,6 +1190,16 @@ function newCategoryFor(p){
   catPick=cats.indexOf(c); renderCats(); $('catModal').classList.remove('hidden');   // pick its icon and color right away
 }
 $('catQuick').onclick=()=>$('catBtn').click();
+
+/* ---------- Claude session links ---------- */
+function claudeBtn(p,cls,label){
+  return p.claude?`<a class="${cls}" href="${esc(safeUrl(p.claude))}" title="Open the Claude session for this project (opens in the Claude app)">${label}</a>`:'';
+}
+function claudeList(p){
+  const all=Array.isArray(p.claudeAll)?p.claudeAll:[];
+  if(!all.length)return '';
+  return `<div class="f"><span>All Claude sessions for this project (${all.length})</span>${all.map(s=>`<div class="trow"><a class="btn" style="flex:1;text-decoration:none;color:var(--text)" href="${esc(safeUrl(s.u))}">✦ ${esc(s.t)}</a></div>`).join('')}</div>`;
+}
 
 /* ---------- status manager ---------- */
 const bulkOpts=()=>'<option value="">Set status…</option>'+STATUSES.map(s=>`<option value="${s.id}">${s.icon} ${esc(s.label)}</option>`).join('');
