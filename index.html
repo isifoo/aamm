@@ -374,7 +374,7 @@ dialog.dlg::backdrop{background:transparent}
 <div id="toast" class="hidden"></div>
 
 <script>
-const APP_VERSION='v20';
+const APP_VERSION='v21';
 const FB_CFG={
   apiKey:"AIzaSyAtG1gnSkQ3rMA3umOg1BtEX_tvkcubjso",
   authDomain:"aamm-ab017.firebaseapp.com",
@@ -577,6 +577,7 @@ function visible(){
     if(qf.overdue && !(p.due && p.due<today())) return false;
     if(qf.blocked && !p.blocked) return false;
     if(qf.bugs && !bugsOpen(p)) return false;
+    if(qf.noclaude && p.claude) return false;
     if(q){const hay=[p.name,p.desc,p.notes,p.tech,p.nextStep,(p.tags||[]).join(' ')].join(' ').toLowerCase(); if(!hay.includes(q))return false;}
     return true;
   });
@@ -624,7 +625,7 @@ function render(){
   const qf=prefs.qf||{};
   $('chips').innerHTML=STATUSES.map(s=>`<span class="chip ${prefs.filter.includes(s.id)?'on':''}" data-st="${s.id}" style="--c:${s.color}">${s.icon} ${esc(s.label)}<span class="n">${counts[s.id]||0}</span></span>`).join('')
     +'<span class="sep"></span>'
-    +[['pinned','📌 Pinned'],['overdue','⏰ Overdue'],['blocked','⛔ Blocked'],['bugs','🐛 Has bugs']].map(([k,l])=>`<span class="chip qf ${qf[k]?'on':''}" data-qf="${k}">${l}</span>`).join('');
+    +[['pinned','📌 Pinned'],['overdue','⏰ Overdue'],['blocked','⛔ Blocked'],['bugs','🐛 Has bugs'],['noclaude','✦ No Claude link']].map(([k,l])=>`<span class="chip qf ${qf[k]?'on':''}" data-qf="${k}">${l}</span>`).join('');
   const tags=[...new Set(Object.values(projects).flatMap(p=>p.tags||[]))].sort();
   $('tagSel').innerHTML='<option value="">All tags</option>'+tags.map(t=>`<option ${t===prefs.tag?'selected':''}>${esc(t)}</option>`).join('');
   $('priSel').innerHTML='<option value="">All priorities</option>'+PRI.map((x,i)=>`<option value="${i}" ${String(i)===String(prefs.pri)?'selected':''}>${esc(x.label)}</option>`).join('');
