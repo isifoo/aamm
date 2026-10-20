@@ -261,6 +261,8 @@ dialog.dlg::backdrop{background:transparent}
 .dh .dicon{display:flex;align-items:center;justify-content:center;width:46px;height:46px;padding:0}
 .crow{flex-wrap:wrap}
 .crow .btn{flex:1 1 calc(50% - 6px)}
+.tsel.active,.tin.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.chip.clr{border-color:#e2445c;color:#e2445c;font-weight:600}
 </style>
 </head>
 <body>
@@ -371,7 +373,7 @@ dialog.dlg::backdrop{background:transparent}
 <div id="toast" class="hidden"></div>
 
 <script>
-const APP_VERSION='v17';
+const APP_VERSION='v18';
 const FB_CFG={
   apiKey:"AIzaSyAtG1gnSkQ3rMA3umOg1BtEX_tvkcubjso",
   authDomain:"aamm-ab017.firebaseapp.com",
@@ -626,6 +628,10 @@ function render(){
   $('tagSel').innerHTML='<option value="">All tags</option>'+tags.map(t=>`<option ${t===prefs.tag?'selected':''}>${esc(t)}</option>`).join('');
   $('priSel').innerHTML='<option value="">All priorities</option>'+PRI.map((x,i)=>`<option value="${i}" ${String(i)===String(prefs.pri)?'selected':''}>${esc(x.label)}</option>`).join('');
   $('catSel').innerHTML=catOptions();
+  const priOn=prefs.pri!==''&&prefs.pri!=null;
+  const anyF=prefs.filter.length||prefs.tag||prefs.cat||priOn||prefs.q||Object.values(prefs.qf||{}).some(Boolean);
+  $('tagSel').classList.toggle('active',!!prefs.tag); $('catSel').classList.toggle('active',!!prefs.cat); $('priSel').classList.toggle('active',priOn); $('search').classList.toggle('active',!!prefs.q);
+  if(anyF)$('chips').insertAdjacentHTML('beforeend','<span class="chip clr" data-clear="1">✕ Clear all filters</span>');
   $('bulkStatus').innerHTML=bulkOpts();
   const list=visible();
   $('count').textContent=list.length+' / '+Object.keys(projects).length;
@@ -848,6 +854,7 @@ function moveGroup(key,dir){
 
 /* ---------- toolbar events ---------- */
 $('chips').addEventListener('click',e=>{
+  if(e.target.closest('[data-clear]')){prefs.filter=[];prefs.tag='';prefs.cat='';prefs.pri='';prefs.q='';prefs.qf={};$('search').value='';savePrefs();render();return;}
   const q=e.target.closest('[data-qf]');
   if(q){prefs.qf=prefs.qf||{};prefs.qf[q.dataset.qf]=!prefs.qf[q.dataset.qf];savePrefs();render();return;}
   const c=e.target.closest('.chip'); if(!c)return; const id=c.dataset.st;
