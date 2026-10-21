@@ -374,7 +374,7 @@ dialog.dlg::backdrop{background:transparent}
 <div id="toast" class="hidden"></div>
 
 <script>
-const APP_VERSION='v21';
+const APP_VERSION='v22';
 const FB_CFG={
   apiKey:"AIzaSyAtG1gnSkQ3rMA3umOg1BtEX_tvkcubjso",
   authDomain:"aamm-ab017.firebaseapp.com",
@@ -1151,6 +1151,23 @@ function newProject(from){
   setTimeout(()=>{const n=document.querySelector('#dlgIn .dname');if(n){n.focus();n.select();}},60);
 }
 $('addBtn').onclick=e=>newProject(e.currentTarget);
+
+/* Click on the empty page around the project panel to close it.
+   - The press AND the release must both be outside (so dragging a text selection past the edge never closes it).
+   - Uses composedPath(), which is fixed when the click starts, so clicks on things that get re-rendered/removed
+     inside the panel (delete a task, switch a tab) still count as inside.
+   - The toolbar, the Categories/Statuses/Tools windows, the toast and the bulk bar count as inside too. */
+const KEEP_OPEN=['#dlgBox','.modal','#toast','#bulk','header'];
+const viewOpen=()=>$('dlg').classList.contains('open');
+function insideKeep(e){
+  return e.composedPath().some(n=>n&&n.matches&&KEEP_OPEN.some(s=>{try{return n.matches(s);}catch(x){return false;}}));
+}
+let downOutside=false;
+document.addEventListener('mousedown',e=>{ downOutside=viewOpen()&&!insideKeep(e); },true);
+document.addEventListener('click',e=>{
+  const was=downOutside; downOutside=false;
+  if(was&&viewOpen()&&!insideKeep(e)&&performance.now()-openedAt>300)closeDlg('click outside');
+});
 
 /* keyboard: instant, deliberately not animated (used constantly) */
 document.addEventListener('keydown',e=>{
