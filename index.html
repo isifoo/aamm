@@ -388,7 +388,7 @@ dialog.dlg::backdrop{background:transparent}
 <div id="toast" class="hidden"></div>
 
 <script>
-const APP_VERSION='v24';
+const APP_VERSION='v25';
 const FB_CFG={
   apiKey:"AIzaSyAtG1gnSkQ3rMA3umOg1BtEX_tvkcubjso",
   authDomain:"aamm-ab017.firebaseapp.com",
@@ -1278,8 +1278,9 @@ function pickClaude(desk,web){
 const CLAUDE_TIPS={desktop:'Open this chat in the Claude desktop app',web:'Open this chat on the web',home:'No web link saved for this chat yet: opens your Claude Code list, tap the chat there'};
 function claudeAnchor(desk,web,cls,label,style){
   const k=pickClaude(desk,web); if(!k)return '';
-  const ext=k.kind!=='desktop';
-  return `<a class="${cls}" ${style?`style="${style}"`:''} href="${esc(safeUrl(k.href))}" ${ext?'target="_blank" rel="noopener"':''} title="${CLAUDE_TIPS[k.kind]}">${label}</a>`;
+  const ext=/^https?:/i.test(k.href);                       // any web address opens in a new tab; claude:// opens the desktop app
+  const tip=CLAUDE_TIPS[ext&&k.kind==='desktop'?'web':k.kind];
+  return `<a class="${cls}" ${style?`style="${style}"`:''} href="${esc(safeUrl(k.href))}" ${ext?'target="_blank" rel="noopener"':''} title="${tip}">${label}</a>`;
 }
 const hasClaude=p=>!!(p.claude||p.claudeWeb);
 function claudeBtn(p,cls,label){return claudeAnchor(p.claude,p.claudeWeb,cls,label);}
