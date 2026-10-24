@@ -388,7 +388,7 @@ dialog.dlg::backdrop{background:transparent}
 <div id="toast" class="hidden"></div>
 
 <script>
-const APP_VERSION='v23';
+const APP_VERSION='v24';
 const FB_CFG={
   apiKey:"AIzaSyAtG1gnSkQ3rMA3umOg1BtEX_tvkcubjso",
   authDomain:"aamm-ab017.firebaseapp.com",
@@ -591,7 +591,7 @@ function visible(){
     if(qf.overdue && !(p.due && p.due<today())) return false;
     if(qf.blocked && !p.blocked) return false;
     if(qf.bugs && !bugsOpen(p)) return false;
-    if(qf.noclaude && p.claude) return false;
+    if(qf.noclaude && hasClaude(p)) return false;
     if(q){const hay=[p.name,p.desc,p.notes,p.tech,p.nextStep,(p.tags||[]).join(' ')].join(' ').toLowerCase(); if(!hay.includes(q))return false;}
     return true;
   });
@@ -706,7 +706,7 @@ function card(p,drag){
   const dis=(label)=>`<span class="btn dis">${label}</span>`;
   const web=u?`<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">🌐 Website</a>`:dis('🌐 Website');
   const fol=`<button class="btn ${p.folder?'':'dis'}" data-act="folder" title="${esc(p.folder||'')}">📁 Folder</button>`;
-  const cla=p.claude?claudeBtn(p,'btn','✦ Claude'):dis('✦ Claude');
+  const cla=hasClaude(p)?claudeBtn(p,'btn','✦ Claude'):dis('✦ Claude');
   const rep_=r?`<a class="btn" href="${esc(r)}" target="_blank" rel="noopener">⌥ Repo</a>`:dis('⌥ Repo');
   return `<div class="card ${p.pinned?'pinned':''}" data-id="${esc(p.id)}" ${drag?'draggable="true"':''} style="--c:${s.color}">
     <div class="chead" style="background:${s.color};color:${pillTx(s.color)}">
@@ -973,7 +973,8 @@ function pUpdates(p){
 function pLinks(p){
   const lk=p.links||[];
   return `${fld('Project link (live app / main URL)','url',p.url,'placeholder="https://..."')}
-  ${fld('Claude session link','claude',p.claude,'placeholder="claude://claude.ai/epitaxy/local_..."')}
+  ${fld('Claude chat: desktop app link','claude',p.claude,'placeholder="claude://claude.ai/epitaxy/local_..."')}
+  ${fld('Claude chat: web / iPad / iPhone link','claudeWeb',p.claudeWeb,'placeholder="https://claude.ai/code/... (the Remote Control address)"')}
   ${claudeList(p)}
   ${fld('Repo link','repo',p.repo,'placeholder="https://github.com/..."')}
   <label class="f"><span>Folder path</span><div class="trow"><input class="rowin" data-f="folder" value="${esc(p.folder||'')}"><button class="btn" data-a="open-folder">Open</button><button class="btn" data-a="copy-folder">Copy</button></div></label>
@@ -1258,14 +1259,34 @@ function newCategoryFor(p){
 }
 $('catQuick').onclick=()=>$('catBtn').click();
 
-/* ---------- Claude session links ---------- */
-function claudeBtn(p,cls,label){
-  return p.claude?`<a class="${cls}" href="${esc(safeUrl(p.claude))}" title="Open the Claude session for this project (opens in the Claude app)">${label}</a>`:'';
+/* ---------- Claude chat links: one per platform ---------- */
+/* The desktop deep link (claude://...) works ONLY inside the Claude desktop app.
+   The web link (claude.ai/code/...) works on iPad, iPhone, Android and any browser, once Remote Control is on for that chat.
+   Each chat can store both; the page picks the right one for the device you are on. */
+const CLAUDE_WEB_HOME='https://claude.ai/code';
+const isMobileDevice=()=>/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+function pickClaude(desk,web){
+  if(isMobileDevice()){
+    if(web)return {href:web,kind:'web'};
+    if(desk)return {href:CLAUDE_WEB_HOME,kind:'home'};     // never hand a phone or tablet the desktop-only link
+    return null;
+  }
+  if(desk)return {href:desk,kind:'desktop'};
+  if(web)return {href:web,kind:'web'};
+  return null;
 }
+const CLAUDE_TIPS={desktop:'Open this chat in the Claude desktop app',web:'Open this chat on the web',home:'No web link saved for this chat yet: opens your Claude Code list, tap the chat there'};
+function claudeAnchor(desk,web,cls,label,style){
+  const k=pickClaude(desk,web); if(!k)return '';
+  const ext=k.kind!=='desktop';
+  return `<a class="${cls}" ${style?`style="${style}"`:''} href="${esc(safeUrl(k.href))}" ${ext?'target="_blank" rel="noopener"':''} title="${CLAUDE_TIPS[k.kind]}">${label}</a>`;
+}
+const hasClaude=p=>!!(p.claude||p.claudeWeb);
+function claudeBtn(p,cls,label){return claudeAnchor(p.claude,p.claudeWeb,cls,label);}
 function claudeList(p){
   const all=Array.isArray(p.claudeAll)?p.claudeAll:[];
   if(!all.length)return '';
-  return `<div class="f"><span>All Claude sessions for this project (${all.length})</span>${all.map(s=>`<div class="trow"><a class="btn" style="flex:1;text-decoration:none;color:var(--text)" href="${esc(safeUrl(s.u))}">✦ ${esc(s.t)}</a></div>`).join('')}</div>`;
+  return `<div class="f"><span>All Claude chats for this project (${all.length})</span>${all.map(s=>`<div class="trow">${claudeAnchor(s.u,s.w,'btn','✦ '+esc(s.t),'flex:1;text-decoration:none;color:var(--text)')}</div>`).join('')}</div>`;
 }
 
 /* ---------- status manager ---------- */
