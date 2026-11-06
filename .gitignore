@@ -1,5 +1,7 @@
-# Publish only the app itself. Everything else in this folder stays local.
+# Publish only the apps themselves. Everything else in this folder stays local.
 *
 !index.html
 !README.md
 !.gitignore
+!eat/
+!eat/**
