@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>eat</title>
-<meta name="description" content="Every Williamsburg restaurant, filtered by rating, picked by slot machine.">
-<meta name="theme-color" content="#faf6f0" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#141210" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Every restaurant in your NYC neighborhood, filtered by rating, picked by slot machine.">
+<meta name="theme-color" content="#faf7f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131210" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -14,234 +14,261 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..800&display=swap">
 <style>
 :root{
-  --bg:#faf6f0; --card:#ffffff; --card2:#f3ece2; --ink:#1d1a17; --dim:#7a7068; --line:#ebe2d6;
-  --accent:#ff4d2e; --accent-ink:#ffffff; --gold:#f5a524; --good:#1f9d55; --shadow:0 1px 2px rgba(60,40,20,.06),0 6px 20px rgba(60,40,20,.06);
-  --r:18px; --ease:cubic-bezier(.23,1,.32,1);
-  --font:ui-rounded,-apple-system,BlinkMacSystemFont,"SF Pro Rounded","Segoe UI",system-ui,sans-serif;
+  --bg:#faf7f2; --card:#ffffff; --soft:#f1ebe2; --ink:#1c1a17; --dim:#787068; --line:#e8e0d4;
+  --accent:#ff4d2e; --gold:#f2a516; --good:#1f9d55;
+  --shadow:0 1px 2px rgba(50,35,20,.05),0 4px 14px rgba(50,35,20,.06);
+  --r:16px; --ease:cubic-bezier(.23,1,.32,1);
+  --font:"DM Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#141210; --card:#1f1c19; --card2:#2a2622; --ink:#f4efe9; --dim:#a39a90; --line:#322d28;
-    --accent:#ff6a4d; --gold:#ffbd45; --good:#3fcf7f; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#141210; --card:#1f1c19; --card2:#2a2622; --ink:#f4efe9; --dim:#a39a90; --line:#322d28;
-  --accent:#ff6a4d; --gold:#ffbd45; --good:#3fcf7f; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  :root{ --bg:#131210; --card:#1e1c19; --soft:#2a2723; --ink:#f3eee8; --dim:#a29a90; --line:#302c27;
+    --accent:#ff6a4d; --gold:#ffbb3d; --good:#3fcf7f; --shadow:0 1px 2px rgba(0,0,0,.35),0 6px 18px rgba(0,0,0,.25); }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 var(--font);overscroll-behavior-y:contain}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.35 var(--font);overscroll-behavior-y:contain}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none;padding:0}
 .hidden{display:none!important}
-.wrap{max-width:560px;margin:0 auto;padding:calc(var(--safe-t) + 10px) 16px calc(var(--safe-b) + 110px)}
+.wrap{max-width:720px;margin:0 auto;padding:calc(var(--safe-t) + 8px) 16px calc(var(--safe-b) + 100px)}
+svg{display:block}
 
 /* header */
-header{display:flex;align-items:center;gap:10px;padding:6px 0 12px}
-.logo{font-size:40px;font-weight:900;letter-spacing:-2px;line-height:1;margin:0}
+.top{display:flex;align-items:center;gap:8px;padding:4px 0 10px}
+.logo{font-size:30px;font-weight:800;letter-spacing:-1.2px;line-height:1;margin:0}
 .logo span{color:var(--accent)}
-.where{font-size:13px;color:var(--dim);margin-top:2px;white-space:nowrap}
+.zone{display:inline-flex;align-items:center;gap:3px;margin-top:3px;font-size:13px;font-weight:600;color:var(--dim)}
+.zone svg{width:14px;height:14px}
 .sp{flex:1}
-.pill{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:99px;background:var(--card);box-shadow:var(--shadow);font-size:13px;color:var(--dim);white-space:nowrap}
-.pill svg{width:16px;height:16px}
-.pill.busy svg{animation:spin 1s linear infinite}
-.iconbtn{width:38px;height:38px;border-radius:99px;display:grid;place-items:center;background:var(--card);box-shadow:var(--shadow)}
-.iconbtn svg{width:20px;height:20px}
-@keyframes spin{to{transform:rotate(360deg)}}
+.tbtn{height:36px;min-width:36px;padding:0 10px;border-radius:12px;background:var(--card);box-shadow:var(--shadow);display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink)}
+.tbtn svg{width:18px;height:18px}
+.tbtn.on{background:var(--accent);color:#fff;box-shadow:none}
 
 /* banner */
-.banner{background:var(--card);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;font-size:14px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:flex-start}
-.banner b{display:block;margin-bottom:2px}
+.banner{background:var(--card);border-radius:var(--r);padding:11px 13px;margin-bottom:10px;font-size:13.5px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:flex-start}
+.banner b{display:block;margin-bottom:2px;font-size:14px}
 .banner .x{margin-left:auto;color:var(--dim);font-size:20px;line-height:1}
-.banner.err{border:1px solid var(--accent)}
-.progress{height:4px;border-radius:4px;background:var(--card2);overflow:hidden;margin-top:8px}
+.banner.err{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.banner .mini{margin-top:8px;height:32px;padding:0 12px;border-radius:10px;background:var(--ink);color:var(--bg);font-weight:700;font-size:13px}
+.progress{height:4px;border-radius:4px;background:var(--soft);overflow:hidden;margin-top:8px}
 .progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s var(--ease)}
 
-/* slot machine */
-.slot{position:relative;border-radius:24px;padding:14px;background:linear-gradient(160deg,#ff5a36,#ff2d55);color:#fff;box-shadow:0 10px 30px rgba(255,60,50,.28);margin-bottom:16px;overflow:hidden}
-.slot::before{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 100% 0%,rgba(255,255,255,.22),transparent 60%);pointer-events:none}
-.slot-top{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:15px;letter-spacing:.3px;margin:0 2px 10px;position:relative}
-.slot-top small{font-weight:600;opacity:.85;font-size:12px}
-.reel-win{position:relative;height:168px;border-radius:16px;background:#fff;overflow:hidden;box-shadow:inset 0 4px 12px rgba(0,0,0,.18)}
-:root[data-theme="dark"] .reel-win{background:#211d1a}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .reel-win{background:#211d1a}}
-.reel-win::before,.reel-win::after{content:"";position:absolute;left:0;right:0;height:56px;z-index:2;pointer-events:none}
+/* slot machine (collapsible) */
+.slotwrap{display:grid;grid-template-rows:1fr;transition:grid-template-rows .35s var(--ease),opacity .25s;margin-bottom:12px}
+.slotwrap.closed{grid-template-rows:0fr;opacity:0;margin-bottom:0}
+.slotwrap>div{overflow:hidden;min-height:0}
+.slot{border-radius:18px;padding:10px;background:linear-gradient(150deg,#ff5a36,#ff2d55);color:#fff;display:flex;gap:10px;align-items:stretch}
+.reel-win{position:relative;flex:1;height:114px;border-radius:12px;background:var(--card);overflow:hidden}
+.reel-win::before,.reel-win::after{content:"";position:absolute;left:0;right:0;height:38px;z-index:2;pointer-events:none}
 .reel-win::before{top:0;background:linear-gradient(var(--card),transparent)}
 .reel-win::after{bottom:0;background:linear-gradient(transparent,var(--card))}
 .reel{position:absolute;left:0;right:0;top:0;will-change:transform}
-.reel div{height:56px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:22px;font-weight:800;color:var(--ink);white-space:nowrap}
-.reel div em{font-style:normal;font-size:28px}
-.payline{position:absolute;left:8px;right:8px;top:56px;height:56px;border-radius:12px;border:2.5px solid var(--gold);z-index:3;pointer-events:none}
-.slot.won .payline{animation:win .9s var(--ease)}
-@keyframes win{0%,100%{transform:scale(1)}30%{transform:scale(1.06);box-shadow:0 0 22px var(--gold)}}
-.slot-actions{display:flex;gap:10px;margin-top:12px;position:relative}
-.spin{flex:1.3;height:52px;border-radius:16px;background:#fff;color:#ff3b30;font-weight:900;font-size:19px;letter-spacing:2px;box-shadow:0 4px 0 rgba(0,0,0,.15);transition:transform .12s var(--ease),box-shadow .12s}
-.spin:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.15)}
-.spin:disabled{opacity:.7}
-.ghost{flex:1;height:52px;border-radius:16px;background:rgba(255,255,255,.18);color:#fff;font-weight:800;font-size:15px;border:1.5px solid rgba(255,255,255,.5)}
-.ghost:disabled{opacity:.45}
-.slot-result{position:relative;text-align:center;font-size:13px;font-weight:700;margin-top:10px;min-height:17px;opacity:.95}
+.reel div{height:38px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;font-weight:800;color:var(--ink);white-space:nowrap}
+.reel div em{font-style:normal;font-size:20px}
+.payline{position:absolute;left:6px;right:6px;top:38px;height:38px;border-radius:10px;box-shadow:inset 0 0 0 2px var(--gold);z-index:3;pointer-events:none}
+.slot.won .payline{animation:win .8s var(--ease)}
+@keyframes win{30%{transform:scale(1.05);box-shadow:inset 0 0 0 2px var(--gold),0 0 16px var(--gold)}}
+.slot-side{width:108px;display:flex;flex-direction:column;gap:8px}
+.spin{flex:1;border-radius:12px;background:#fff;color:#ff3b30;font-weight:800;font-size:16px;letter-spacing:1.5px;box-shadow:0 3px 0 rgba(0,0,0,.15);transition:transform .12s var(--ease),box-shadow .12s}
+.spin:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.15)}
+.ghost{height:38px;border-radius:12px;background:rgba(255,255,255,.18);color:#fff;font-weight:700;font-size:13px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}
+.ghost:disabled,.spin:disabled{opacity:.5}
+.slot-result{font-size:12px;font-weight:700;text-align:center;opacity:.95;min-height:15px}
 
-/* filters */
-.filters{background:var(--card);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);margin-bottom:12px}
-.row{display:flex;align-items:center;gap:10px}
-.rating-lbl{font-weight:800;font-size:15px;min-width:118px}
-.rating-lbl b{color:var(--gold)}
-input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:30px;background:transparent}
-input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:8px;background:linear-gradient(90deg,var(--gold) var(--p,0%),var(--card2) var(--p,0%))}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-10px;border-radius:99px;background:#fff;border:0;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-input[type=range]::-moz-range-track{height:8px;border-radius:8px;background:var(--card2)}
-input[type=range]::-moz-range-progress{height:8px;border-radius:8px;background:var(--gold)}
-input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:99px;background:#fff;border:0;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-.presets{display:flex;gap:6px;margin-top:8px}
-.presets button{flex:1;height:32px;border-radius:10px;background:var(--card2);font-size:13px;font-weight:700;color:var(--dim)}
-.presets button.on{background:var(--ink);color:var(--bg)}
-.search{display:flex;align-items:center;gap:8px;height:44px;border-radius:12px;background:var(--card2);padding:0 12px;margin-top:12px}
-.search svg{width:18px;height:18px;color:var(--dim);flex:none}
+/* toolbar */
+.bar{display:flex;gap:8px;margin-bottom:10px}
+.search{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:40px;border-radius:12px;background:var(--card);box-shadow:var(--shadow);padding:0 12px}
+.search svg{width:17px;height:17px;color:var(--dim);flex:none}
 .search input{flex:1;min-width:0;border:0;background:transparent;outline:0;font-size:16px}
+.seg{display:flex;background:var(--soft);border-radius:12px;padding:3px;flex:none}
+.seg button{width:36px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--dim)}
+.seg button svg{width:18px;height:18px}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
 
-.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 16px 4px;margin:0 -16px 12px;scrollbar-width:none;scroll-snap-type:x proximity}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex:none;height:36px;padding:0 13px;border-radius:99px;background:var(--card);box-shadow:var(--shadow);font-size:14px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;scroll-snap-align:start}
-.chip small{color:var(--dim);font-weight:600;font-size:12px}
+.row-scroll{display:flex;gap:6px;overflow-x:auto;padding:2px 16px 4px;margin:0 -16px 8px;scrollbar-width:none}
+.row-scroll::-webkit-scrollbar{display:none}
+.chip{flex:none;height:32px;padding:0 11px;border-radius:99px;background:var(--card);box-shadow:var(--shadow);font-size:13px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.chip small{color:var(--dim);font-weight:600;font-size:11.5px}
 .chip.on{background:var(--ink);color:var(--bg)}
 .chip.on small{color:inherit;opacity:.7}
+.chip.star{color:var(--dim)}
+.chip.star.on{color:var(--bg)}
+.tabs{display:flex;gap:18px;overflow-x:auto;margin:2px 0 6px;border-bottom:1px solid var(--line);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;padding:8px 0;font-size:14px;font-weight:700;color:var(--dim);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--ink);border-color:var(--accent)}
+.listhead{display:flex;align-items:center;gap:10px;margin:8px 2px 10px;font-size:12.5px;color:var(--dim)}
+.listhead .sync{display:inline-flex;align-items:center;gap:4px;color:var(--dim);font-size:12.5px}
+.listhead .sync svg{width:13px;height:13px}
+.listhead .sync.busy svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.listhead select{margin-left:auto;border:0;background:transparent;font-weight:700;color:var(--ink);font-size:12.5px;text-align:right}
 
-.seg{display:flex;background:var(--card2);border-radius:12px;padding:3px;margin-bottom:10px}
-.seg button{flex:1;height:34px;border-radius:9px;font-size:14px;font-weight:700;color:var(--dim)}
-.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
-.listhead{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 8px;font-size:13px;color:var(--dim)}
-.listhead select{border:0;background:transparent;font-weight:700;color:var(--ink);font-size:13px;text-align:right}
-
-/* cards */
-.list{display:flex;flex-direction:column;gap:10px}
-.card{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:var(--r);padding:12px;box-shadow:var(--shadow);text-align:left;width:100%;transition:transform .15s var(--ease)}
-.card:active{transform:scale(.98)}
-.emo{flex:none;width:52px;height:52px;border-radius:14px;background:var(--card2);display:grid;place-items:center;font-size:28px}
+/* list */
+.list{display:flex;flex-direction:column;gap:8px}
+.card{display:flex;gap:11px;align-items:center;background:var(--card);border-radius:var(--r);padding:10px;box-shadow:var(--shadow);text-align:left;width:100%;transition:transform .15s var(--ease)}
+.card:active,.tile:active{transform:scale(.98)}
+.emo{flex:none;width:46px;height:46px;border-radius:12px;background:var(--soft);display:grid;place-items:center;font-size:24px}
 .body{flex:1;min-width:0}
-.body h3{margin:0 0 3px;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta{font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta .open{color:var(--good);font-weight:700}
-.meta .closed{color:var(--accent);font-weight:700}
-.tags{display:flex;gap:6px;margin-top:5px;font-size:12px}
-.tags span{padding:2px 7px;border-radius:99px;background:var(--card2);color:var(--dim);font-weight:700}
-.tags .me{background:rgba(245,165,36,.16);color:#b26f00}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tags .me{color:var(--gold)}}
-:root[data-theme="dark"] .tags .me{color:var(--gold)}
+.body h3{margin:0 0 2px;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:12.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.open{color:var(--good);font-weight:700}
+.closed{color:var(--accent);font-weight:700}
+.tags{display:flex;gap:5px;margin-top:4px;font-size:11px;flex-wrap:wrap}
+.tags span{padding:1px 7px;border-radius:99px;background:var(--soft);color:var(--dim);font-weight:700}
+.tags .me{background:rgba(242,165,22,.16);color:#a76800}
+@media (prefers-color-scheme: dark){.tags .me,.tile .mk{color:var(--gold)!important}}
 .score{flex:none;text-align:right}
-.score b{display:block;font-size:18px;font-weight:900}
-.score b i{font-style:normal;color:var(--gold)}
-.score small{font-size:12px;color:var(--dim)}
-.empty{text-align:center;color:var(--dim);padding:40px 20px}
-.empty b{display:block;font-size:40px;margin-bottom:6px}
-.more{width:100%;height:46px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);font-weight:800;margin-top:6px}
+.score b{display:block;font-size:16px;font-weight:800}
+.score b i,.tile .r i{font-style:normal;color:var(--gold)}
+.score small{font-size:11.5px;color:var(--dim)}
 
-.fab{position:fixed;right:max(16px,calc(50% - 264px));bottom:calc(var(--safe-b) + 20px);width:62px;height:62px;border-radius:22px;background:var(--ink);color:var(--bg);display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:30;transition:transform .15s var(--ease)}
+/* grid */
+.list.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:600px){.list.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tile{position:relative;display:flex;flex-direction:column;text-align:left;background:var(--card);border-radius:var(--r);padding:12px;box-shadow:var(--shadow);min-height:150px;transition:transform .15s var(--ease)}
+.tile .big{font-size:34px;line-height:1;margin-bottom:10px}
+.tile h3{margin:0 0 4px;font-size:14.5px;font-weight:700;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile .meta{white-space:normal}
+.tile .r{margin-top:auto;padding-top:8px;font-size:14px;font-weight:800;display:flex;align-items:baseline;gap:5px}
+.tile .r small{font-weight:600;color:var(--dim);font-size:11.5px}
+.tile .mk{position:absolute;top:10px;right:10px;font-size:12px;font-weight:800;color:#a76800}
+.list.grid .empty,.list.grid .more{grid-column:1/-1}
+
+.empty{text-align:center;color:var(--dim);padding:36px 20px}
+.empty b{display:block;font-size:36px;margin-bottom:6px}
+.empty .mini{margin-top:12px;height:38px;padding:0 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-weight:700}
+.more{width:100%;height:44px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);font-weight:700;margin-top:4px}
+
+/* map */
+#map{height:calc(100dvh - 300px);min-height:340px;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);background:var(--soft);z-index:0}
+.mapnote{font-size:12.5px;color:var(--dim);margin-top:8px;text-align:center}
+.pinwrap{background:none;border:0}
+.pin{position:absolute;transform:translate(-50%,-100%);margin-top:-6px;display:flex;align-items:center;gap:3px;padding:3px 7px 3px 4px;border-radius:99px;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.25);font:800 12px var(--font);color:var(--ink);white-space:nowrap}
+.pin::after{content:"";position:absolute;left:50%;bottom:-4px;width:9px;height:9px;background:inherit;transform:translateX(-50%) rotate(45deg);z-index:-1;border-radius:2px}
+.pin i{font-style:normal;font-size:16px}
+.pin.me{background:var(--accent);color:#fff}
+.pin b{font-weight:800}
+#map.far .pin{padding:2px;margin-top:-4px}
+#map.far .pin b{display:none}
+#map.far .pin i{font-size:14px}
+.leaflet-control-attribution{font:10px var(--font)!important}
+#map .leaflet-tile-pane{filter:saturate(.75) contrast(.95)}
+@media (prefers-color-scheme: dark){#map .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.5)}#map{background:#1b1a18}}
+
+.fab{position:fixed;right:max(16px,calc(50% - 344px));bottom:calc(var(--safe-b) + 18px);width:54px;height:54px;border-radius:18px;background:var(--ink);color:var(--bg);display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:30;transition:transform .15s var(--ease)}
 .fab:active{transform:scale(.92)}
-.fab svg{width:28px;height:28px}
+.fab svg{width:24px;height:24px}
 
 /* sheets */
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s var(--ease);z-index:40}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s var(--ease);z-index:1000}
 .scrim.on{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;max-height:92vh;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);border-radius:26px 26px 0 0;padding:8px 18px calc(var(--safe-b) + 22px);z-index:50;transform:translateY(105%);transition:transform .38s var(--ease);overscroll-behavior:contain}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:600px;margin:0 auto;max-height:90vh;max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);border-radius:22px 22px 0 0;padding:6px 16px calc(var(--safe-b) + 20px);z-index:1001;transform:translateY(105%);transition:transform .36s var(--ease);overscroll-behavior:contain}
 .sheet.on{transform:none}
-.grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 12px}
-.sheet h2{margin:0 0 4px;font-size:26px;font-weight:900;letter-spacing:-.5px;line-height:1.1}
-.sub{color:var(--dim);font-size:14px;margin-bottom:14px}
-.pickflag{display:inline-block;background:var(--accent);color:#fff;font-weight:800;font-size:12px;padding:4px 10px;border-radius:99px;margin-bottom:8px;letter-spacing:.3px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-.stat{background:var(--card);border-radius:14px;padding:10px;text-align:center;box-shadow:var(--shadow)}
-.stat b{display:block;font-size:20px;font-weight:900}
-.stat small{font-size:12px;color:var(--dim)}
-.btns{display:flex;gap:8px;margin-bottom:16px}
-.btn{flex:1;height:48px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);font-weight:800;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--ink)}
+.grab{width:38px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 12px}
+.sheet h2{margin:0 0 3px;font-size:23px;font-weight:800;letter-spacing:-.4px;line-height:1.15}
+.sub{color:var(--dim);font-size:13.5px;margin-bottom:14px}
+.pickflag{display:inline-block;background:var(--accent);color:#fff;font-weight:800;font-size:11px;padding:3px 9px;border-radius:99px;margin-bottom:8px;letter-spacing:.4px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border-radius:14px;padding:9px;text-align:center;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:17px;font-weight:800}
+.stat small{font-size:11.5px;color:var(--dim)}
+.btns{display:flex;gap:8px;margin-bottom:12px}
+.btn{flex:1;height:44px;border-radius:13px;background:var(--card);box-shadow:var(--shadow);font-weight:700;font-size:14.5px;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--ink)}
 .btn.primary{background:var(--accent);color:#fff;box-shadow:none}
 .btn.dark{background:var(--ink);color:var(--bg)}
 .btn.danger{color:var(--accent)}
 .btn:disabled{opacity:.5}
-.section{background:var(--card);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);margin-bottom:12px}
-.section h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--dim)}
+.section{background:var(--card);border-radius:var(--r);padding:13px;box-shadow:var(--shadow);margin-bottom:10px}
+.section h4{margin:0 0 9px;font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim)}
 .stars{display:flex;gap:4px}
-.stars button{font-size:36px;line-height:1;color:var(--line);transition:transform .15s var(--ease),color .15s}
+.stars button{font-size:32px;line-height:1;color:var(--line);transition:transform .15s var(--ease),color .15s}
 .stars button.on{color:var(--gold)}
 .stars button:active{transform:scale(1.25)}
-.toggles{display:flex;gap:8px;margin-top:12px}
-.toggle{flex:1;height:42px;border-radius:12px;background:var(--card2);font-weight:800;font-size:14px;color:var(--dim)}
+.toggles{display:flex;gap:8px;margin-top:10px}
+.toggle{flex:1;height:38px;border-radius:11px;background:var(--soft);font-weight:700;font-size:13.5px;color:var(--dim)}
 .toggle.on{background:var(--ink);color:var(--bg)}
-label.f{display:block;font-size:13px;font-weight:700;color:var(--dim);margin:0 0 6px}
-.in{width:100%;height:46px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);padding:0 12px;font-size:16px;outline:0;margin-bottom:12px}
+label.f{display:block;font-size:12.5px;font-weight:700;color:var(--dim);margin:0 0 5px}
+.in{width:100%;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);padding:0 12px;font-size:16px;outline:0;margin-bottom:12px}
 .in:focus{border-color:var(--accent)}
-textarea.in{height:84px;padding:10px 12px;resize:vertical}
+textarea.in{height:80px;padding:10px 12px;resize:vertical}
 select.in{-webkit-appearance:none;appearance:none}
-.hint{font-size:13px;color:var(--dim);margin:-4px 0 12px;line-height:1.45}
-.hint a{color:var(--accent)}
+.hint{font-size:12.5px;color:var(--dim);margin:-4px 0 12px;line-height:1.45}
 .results{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-.results button{text-align:left;background:var(--card2);border-radius:12px;padding:10px 12px;font-size:14px}
+.results button{text-align:left;background:var(--soft);border-radius:12px;padding:9px 12px;font-size:13.5px}
 .results button b{display:block}
-.results button.on{outline:2px solid var(--accent)}
-.radio{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.radio button{height:36px;padding:0 12px;border-radius:10px;background:var(--card2);font-weight:700;font-size:14px;color:var(--dim)}
-.radio button.on{background:var(--ink);color:var(--bg)}
-.switchrow{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:15px;font-weight:600;padding:4px 0}
-.switchrow small{display:block;color:var(--dim);font-weight:400;font-size:13px}
-.sw{flex:none;width:52px;height:32px;border-radius:99px;background:var(--line);position:relative;transition:background .2s}
-.sw::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:99px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:transform .25s var(--ease)}
+.results button.on{box-shadow:inset 0 0 0 2px var(--accent)}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.pills button{height:34px;padding:0 11px;border-radius:10px;background:var(--soft);font-weight:700;font-size:13px;color:var(--dim)}
+.pills button.on{background:var(--ink);color:var(--bg)}
+.pills.skip button.on{background:var(--accent);color:#fff;text-decoration:line-through}
+.switchrow{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14.5px;font-weight:600;padding:3px 0}
+.switchrow small{display:block;color:var(--dim);font-weight:400;font-size:12.5px}
+.sw{flex:none;width:50px;height:30px;border-radius:99px;background:var(--line);position:relative;transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:99px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:transform .25s var(--ease)}
 .sw.on{background:var(--good)}
 .sw.on::after{transform:translateX(20px)}
-.toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 96px);transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:all .3s var(--ease);z-index:60;max-width:90vw;text-align:center}
+.zlist{display:flex;flex-direction:column;gap:6px}
+.zlist h5{margin:10px 2px 2px;font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim)}
+.zitem{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;background:var(--card);box-shadow:var(--shadow);border-radius:13px;padding:11px 13px;font-weight:700}
+.zitem small{font-weight:500;color:var(--dim);font-size:12px;white-space:nowrap}
+.zitem.on{box-shadow:inset 0 0 0 2px var(--accent)}
+.toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 88px);transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:9px 15px;border-radius:99px;font-weight:700;font-size:13.5px;opacity:0;pointer-events:none;transition:all .3s var(--ease);z-index:1100;max-width:90vw;text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion: reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
+  <header class="top">
     <div>
       <h1 class="logo">eat<span>.</span></h1>
-      <div class="where">Williamsburg, Brooklyn</div>
+      <button class="zone" id="zoneBtn" aria-label="Change neighborhood"><span id="zoneName"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
     </div>
     <div class="sp"></div>
-    <button class="pill" id="syncPill" aria-label="Refresh from Google Maps">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-      <span id="syncTxt">Starter list</span>
-    </button>
-    <button class="iconbtn" id="openSettings" aria-label="Settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <button class="tbtn" id="slotToggle" aria-label="Slot machine" aria-pressed="false">🎰</button>
+    <button class="tbtn" id="openSettings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
     </button>
   </header>
 
   <div id="banner"></div>
 
-  <section class="slot" id="slot">
-    <div class="slot-top"><span>What are we eating?</span><small id="slotCount"></small></div>
-    <div class="reel-win"><div class="reel" id="reel"></div><div class="payline"></div></div>
-    <div class="slot-actions">
-      <button class="spin" id="spinBtn">SPIN</button>
-      <button class="ghost" id="pickBtn" disabled>Pick a spot</button>
-    </div>
-    <div class="slot-result" id="slotResult"></div>
-  </section>
+  <div class="slotwrap closed" id="slotWrap"><div>
+    <section class="slot" id="slot">
+      <div class="reel-win"><div class="reel" id="reel"></div><div class="payline"></div></div>
+      <div class="slot-side">
+        <button class="spin" id="spinBtn">SPIN</button>
+        <button class="ghost" id="pickBtn" disabled>Pick a spot</button>
+        <div class="slot-result" id="slotResult"></div>
+      </div>
+    </section>
+  </div></div>
 
-  <section class="filters">
-    <div class="row">
-      <div class="rating-lbl" id="ratingLbl"></div>
-      <input type="range" id="minRating" min="3" max="5" step="0.1" aria-label="Minimum rating">
-    </div>
-    <div class="presets" id="presets"></div>
+  <div class="bar">
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="Search name, street, dish…" autocomplete="off">
+      <input id="q" type="search" name="eat-place-filter" placeholder="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
     </div>
-  </section>
+    <div class="seg" id="layout">
+      <button data-l="list" aria-label="List view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg></button>
+      <button data-l="grid" aria-label="Grid view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></button>
+      <button data-l="map" aria-label="Map view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="m9 4-5 2v14l5-2 6 2 5-2V4l-5 2-6-2zM9 4v14M15 6v14"/></svg></button>
+    </div>
+  </div>
 
-  <div class="chips" id="chips"></div>
+  <div class="row-scroll" id="presets"></div>
+  <div class="row-scroll" id="chips"></div>
 
-  <div class="seg" id="views">
-    <button data-v="all" class="on">All</button>
+  <div class="tabs" id="views">
+    <button data-v="all">All</button>
     <button data-v="fav">Saved</button>
     <button data-v="been">Been</button>
     <button data-v="todo">Not yet</button>
@@ -250,6 +277,10 @@ select.in{-webkit-appearance:none;appearance:none}
 
   <div class="listhead">
     <span id="count"></span>
+    <button class="sync" id="syncBtn" aria-label="Refresh from Google Maps">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      <span id="syncTxt"></span>
+    </button>
     <select id="sort" aria-label="Sort">
       <option value="rating">Top rated</option>
       <option value="smart">Best + popular</option>
@@ -259,6 +290,7 @@ select.in{-webkit-appearance:none;appearance:none}
     </select>
   </div>
   <div class="list" id="list"></div>
+  <div id="mapWrap" class="hidden"><div id="map"></div><div class="mapnote" id="mapNote"></div></div>
 </div>
 
 <button class="fab" id="addBtn" aria-label="Add a restaurant">
@@ -275,19 +307,37 @@ select.in{-webkit-appearance:none;appearance:none}
 
 /* ---------------- config ---------------- */
 const LS = 'eat.v1';
-// Williamsburg, roughly: East River to Bushwick, Flushing Ave to McCarren Park.
-const BOUNDS = { low:{latitude:40.6990, longitude:-73.9690}, high:{latitude:40.7230, longitude:-73.9330} };
+const box = (s, w, n, e) => ({ low:{latitude:s, longitude:w}, high:{latitude:n, longitude:e} });
+// Neighborhood boxes are approximate rectangles (south, west, north, east).
+const ZONES = {
+  williamsburg: { name:'Williamsburg',        boro:'Brooklyn',  b:box(40.6990,-73.9690,40.7230,-73.9330) },
+  greenpoint:   { name:'Greenpoint',          boro:'Brooklyn',  b:box(40.7205,-73.9620,40.7395,-73.9370) },
+  bushwick:     { name:'Bushwick',            boro:'Brooklyn',  b:box(40.6820,-73.9380,40.7110,-73.9050) },
+  dumbo:        { name:'DUMBO & Brooklyn Heights', boro:'Brooklyn', b:box(40.6900,-73.9990,40.7060,-73.9800) },
+  fortgreene:   { name:'Fort Greene & Clinton Hill', boro:'Brooklyn', b:box(40.6820,-73.9790,40.6990,-73.9560) },
+  parkslope:    { name:'Park Slope',          boro:'Brooklyn',  b:box(40.6600,-73.9900,40.6850,-73.9690) },
+  midtown:      { name:'Midtown',             boro:'Manhattan', b:box(40.7460,-73.9960,40.7650,-73.9680) },
+  chelsea:      { name:'Chelsea & Flatiron',  boro:'Manhattan', b:box(40.7380,-74.0080,40.7480,-73.9850) },
+  eastvillage:  { name:'East Village',        boro:'Manhattan', b:box(40.7210,-73.9920,40.7330,-73.9750) },
+  westvillage:  { name:'West Village',        boro:'Manhattan', b:box(40.7290,-74.0110,40.7400,-73.9990) },
+  les:          { name:'Lower East Side',     boro:'Manhattan', b:box(40.7120,-73.9940,40.7240,-73.9780) },
+  soho:         { name:'SoHo & Nolita',       boro:'Manhattan', b:box(40.7180,-74.0050,40.7280,-73.9930) },
+  fidi:         { name:'FiDi & Tribeca',      boro:'Manhattan', b:box(40.7010,-74.0160,40.7210,-74.0030) },
+  ues:          { name:'Upper East Side',     boro:'Manhattan', b:box(40.7640,-73.9700,40.7880,-73.9450) },
+  uws:          { name:'Upper West Side',     boro:'Manhattan', b:box(40.7700,-73.9890,40.8010,-73.9640) },
+  harlem:       { name:'Harlem',              boro:'Manhattan', b:box(40.8000,-73.9550,40.8250,-73.9350) },
+  astoria:      { name:'Astoria',             boro:'Queens',    b:box(40.7550,-73.9350,40.7780,-73.9050) },
+  lic:          { name:'Long Island City',    boro:'Queens',    b:box(40.7380,-73.9600,40.7550,-73.9350) },
+};
 const QUERIES = ['restaurants','pizza','italian restaurant','sushi','ramen','japanese restaurant','mexican restaurant','tacos',
   'thai restaurant','chinese restaurant','korean restaurant','indian restaurant','vietnamese restaurant','mediterranean restaurant',
   'middle eastern restaurant','greek restaurant','french restaurant','spanish tapas','latin american restaurant','american restaurant',
   'new american restaurant','burgers','steakhouse','bbq','seafood','oysters','brunch','breakfast','diner','bakery','cafe',
   'bagels deli','sandwiches','vegan restaurant','dessert','wine bar','cocktail bar with food','caribbean restaurant','african restaurant'];
-const FIELDS = ['id','displayName','formattedAddress','shortFormattedAddress','rating','userRatingCount','primaryType',
-  'primaryTypeDisplayName','types','priceLevel','googleMapsUri','location','businessStatus','currentOpeningHours.openNow']
-  .map(f => 'places.' + f).join(',') + ',nextPageToken';
+const FIELDS = ['id','displayName','formattedAddress','rating','userRatingCount','primaryType','types','priceLevel',
+  'googleMapsUri','location','businessStatus','currentOpeningHours.openNow'].map(f => 'places.' + f).join(',') + ',nextPageToken';
 const FOOD_TYPES = /restaurant|food|cafe|coffee|bakery|bar|pub|diner|deli|meal|bagel|dessert|ice_cream|pizza|sandwich|steak|brunch|breakfast|tea_house|juice|confectionery/;
 
-// genre key -> [label, emoji]; order matters for matching
 const GENRES = {
   pizza:['Pizza','🍕'], sushi:['Sushi','🍣'], ramen:['Ramen','🍜'], japanese:['Japanese','🍱'], italian:['Italian','🍝'],
   mexican:['Mexican','🌮'], thai:['Thai','🌶️'], chinese:['Chinese','🥟'], korean:['Korean','🍲'], indian:['Indian','🍛'],
@@ -314,18 +364,17 @@ const TYPE_MAP = [
 ];
 const PRICE = {PRICE_LEVEL_FREE:'Free',PRICE_LEVEL_INEXPENSIVE:'$',PRICE_LEVEL_MODERATE:'$$',PRICE_LEVEL_EXPENSIVE:'$$$',PRICE_LEVEL_VERY_EXPENSIVE:'$$$$'};
 
-// A hand-picked starter list so the app is useful before the first Google Maps scan.
-// Ratings here are approximate; a scan replaces this whole list with live Google data.
+// Starter list for Williamsburg, shown before the first Google Maps scan. Ratings are approximate.
 const SEED = [
   ['Lilia','italian','567 Union Ave',4.6,'$$$'],['Peter Luger Steak House','steak','178 Broadway',4.4,'$$$$'],
   ["L'Industrie Pizzeria",'pizza','254 S 2nd St',4.7,'$'],['Best Pizza','pizza','33 Havemeyer St',4.5,'$'],
-  ["Joe's Pizza",'pizza','216 Bedford Ave',4.5,'$'],['Vinnie\'s Pizzeria','pizza','148 Bedford Ave',4.4,'$'],
+  ["Joe's Pizza",'pizza','216 Bedford Ave',4.5,'$'],["Vinnie's Pizzeria",'pizza','148 Bedford Ave',4.4,'$'],
   ['Fornino','pizza','187 Bedford Ave',4.3,'$$'],['Emmy Squared','pizza','364 Grand St',4.5,'$$'],
   ['Diner','american','85 Broadway',4.5,'$$$'],['Marlow & Sons','american','81 Broadway',4.4,'$$$'],
   ['Llama Inn','latin','50 Withers St',4.5,'$$$'],['Misi','italian','329 Kent Ave',4.6,'$$$'],
   ['Le Crocodile','french','80 Wythe Ave',4.4,'$$$'],['Francie','french','134 Broadway',4.6,'$$$$'],
   ['Sunday in Brooklyn','brunch','348 Wythe Ave',4.5,'$$'],['Café Mogador','middle_eastern','133 Wythe Ave',4.5,'$$'],
-  ['Bamonte\'s','italian','32 Withers St',4.5,'$$$'],['Aurora','italian','70 Grand St',4.5,'$$'],
+  ["Bamonte's",'italian','32 Withers St',4.5,'$$$'],['Aurora','italian','70 Grand St',4.5,'$$'],
   ['Antica Pesa','italian','115 Berry St',4.5,'$$$'],['Barano','italian','26 Broadway',4.6,'$$$'],
   ['Leuca','italian','111 N 12th St',4.4,'$$$'],['Rabbit Hole','brunch','352 Bedford Ave',4.5,'$$'],
   ['Okonomi','japanese','150 Ainslie St',4.6,'$$'],['Shalom Japan','japanese','310 S 4th St',4.5,'$$$'],
@@ -345,17 +394,25 @@ const SEED = [
 ];
 
 /* ---------------- state ---------------- */
-const blank = () => ({ places:{}, mine:{}, s:{ key:'', autoDays:7, useMine:true, showHidden:false, minRating:4.0, genre:'', view:'all', sort:'rating', lastSync:0 } });
+const defaults = () => ({ key:'', autoDays:7, useMine:true, showHidden:false, minRating:4.0, genre:'', view:'all', sort:'rating',
+  zone:'williamsburg', near:null, layout:'list', slotOpen:false, skipGenres:[], dismissIntro:false });
 let D;
 try { D = JSON.parse(localStorage.getItem(LS)) || null; } catch { D = null; }
 if (!D) {
-  D = blank();
+  D = { v:2, zones:{ williamsburg:{ places:{}, lastSync:0 } }, mine:{}, s:defaults() };
   SEED.forEach(([name, g, addr, rating, price], i) => {
     const id = 'starter-' + i;
-    D.places[id] = { id, name, genre:g, address:addr + ', Brooklyn, NY', rating, priceLabel:price, source:'starter' };
+    D.zones.williamsburg.places[id] = { id, name, genre:g, address:addr + ', Brooklyn, NY', rating, priceLabel:price, source:'starter' };
   });
 }
-D.s = Object.assign(blank().s, D.s || {});
+if (!D.zones) { // v1 -> v2: one neighborhood -> many
+  D.zones = { williamsburg:{ places:D.places || {}, lastSync:(D.s && D.s.lastSync) || 0 } };
+  delete D.places; D.v = 2;
+}
+D.mine = D.mine || {};
+D.s = Object.assign(defaults(), D.s || {});
+delete D.s.lastSync;
+if (D.s.zone !== 'near' && !ZONES[D.s.zone]) D.s.zone = 'williamsburg';
 const save = () => { try { localStorage.setItem(LS, JSON.stringify(D)); } catch {} };
 save();
 
@@ -367,9 +424,12 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/^the\s+/,'').replace(/[^a-z0-9]/g,'');
 const fmtN = n => n >= 1000 ? (n/1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/,'') + 'k' : String(n);
 const ago = t => { if (!t) return ''; const m = (Date.now()-t)/6e4; if (m<1) return 'just now'; if (m<60) return Math.round(m)+'m ago'; const h=m/60; if (h<24) return Math.round(h)+'h ago'; return Math.round(h/24)+'d ago'; };
-function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('on'),2200); }
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('on'),2400); }
 const me = id => D.mine[id] || {};
 function setMine(id, patch){ D.mine[id] = Object.assign({}, D.mine[id], patch); save(); }
+const zoneInfo = k => k === 'near' ? { name:'Near me', boro:'', b: D.s.near && D.s.near.b } : ZONES[k] || ZONES.williamsburg;
+function Z(k = D.s.zone){ return D.zones[k] || (D.zones[k] = { places:{}, lastSync:0 }); }
+const P = () => Z().places;
 
 function genreFromTypes(primary, types){
   const list = [primary, ...(types||[])].filter(Boolean);
@@ -377,25 +437,22 @@ function genreFromTypes(primary, types){
   return 'other';
 }
 const genreOf = p => me(p.id).genre || p.genre || 'other';
-const genreInfo = g => GENRES[g] || [g.replace(/(^|_)\w/g, m => m.replace('_',' ').toUpperCase()), '🍽️'];
-function score(p){
-  const mr = me(p.id).rating;
-  if (D.s.useMine && mr) return mr;
-  return p.rating ?? mr ?? null;
-}
+const genreInfo = g => GENRES[g] || [String(g).replace(/(^|_)\w/g, m => m.replace('_',' ').toUpperCase()), '🍽️'];
+function score(p){ const mr = me(p.id).rating; if (D.s.useMine && mr) return mr; return p.rating ?? mr ?? null; }
 
 /* ---------------- filtering ---------------- */
 function baseList(){
-  const min = +D.s.minRating, qq = norm(q), v = D.s.view;
-  return Object.values(D.places).filter(p => {
-    const m = me(p.id);
+  const min = +D.s.minRating, qq = norm(q), v = D.s.view, skip = new Set(D.s.skipGenres);
+  return Object.values(P()).filter(p => {
+    const m = me(p.id), g = genreOf(p);
+    if (skip.has(g)) return false;
     if (m.hidden && !D.s.showHidden) return false;
     if (v === 'fav' && !m.fav) return false;
     if (v === 'been' && !m.been) return false;
     if (v === 'todo' && m.been) return false;
     if (v === 'mine' && p.source !== 'mine') return false;
     if (min > 0) { const s = score(p); if (s == null || s < min) return false; }
-    if (qq && !norm(p.name + p.address + genreInfo(genreOf(p))[0] + (m.note||'')).includes(qq)) return false;
+    if (qq && !norm(p.name + p.address + genreInfo(g)[0] + (m.note||'')).includes(qq)) return false;
     return true;
   });
 }
@@ -406,10 +463,7 @@ function filtered(){
     if (by === 'name') return a.name.localeCompare(b.name);
     if (by === 'reviews') return rc(b) - rc(a);
     if (by === 'mine') return (me(b.id).rating||0) - (me(a.id).rating||0) || sc(b) - sc(a);
-    if (by === 'smart') { // Bayesian-ish: pull low-review places toward 4.2
-      const w = p => { const n = rc(p) || (me(p.id).rating ? 5 : 0); return (sc(p)*n + 4.2*50)/(n+50); };
-      return w(b) - w(a);
-    }
+    if (by === 'smart') { const w = p => { const n = rc(p) || (me(p.id).rating ? 5 : 0); return (sc(p)*n + 4.2*50)/(n+50); }; return w(b) - w(a); }
     return sc(b) - sc(a) || rc(b) - rc(a);
   });
   return list;
@@ -421,115 +475,184 @@ function genreCounts(){
 }
 
 /* ---------------- render ---------------- */
-function renderRating(){
-  const v = +D.s.minRating, r = $('#minRating');
-  r.value = Math.max(3, v); r.style.setProperty('--p', ((Math.max(3, v)-3)/2*100) + '%');
-  $('#ratingLbl').innerHTML = v > 0 ? `<b>★</b> ${v.toFixed(1)}+` : 'Any rating';
+function renderTop(){
+  const z = zoneInfo(D.s.zone);
+  $('#zoneName').textContent = z.name + (z.boro ? ', ' + z.boro : '');
+  const open = !!D.s.slotOpen;
+  $('#slotWrap').classList.toggle('closed', !open);
+  $('#slotToggle').classList.toggle('on', open);
+  $('#slotToggle').setAttribute('aria-pressed', String(open));
+  $('#layout').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === D.s.layout));
+  $('#views').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === D.s.view));
+  $('#sort').value = D.s.sort;
+  $('#sort').classList.toggle('hidden', D.s.layout === 'map');
+}
+function renderPresets(){
+  const v = +D.s.minRating;
   $('#presets').innerHTML = [0,3.5,4,4.3,4.5,4.7].map(x =>
-    `<button data-r="${x}" class="${Math.abs(x-v)<.01?'on':''}">${x ? '★ '+x.toFixed(1) : 'Any'}</button>`).join('');
+    `<button class="chip star ${Math.abs(x-v)<.01?'on':''}" data-r="${x}">${x ? '★ ' + x.toFixed(1) + '+' : '★ Any rating'}</button>`).join('');
 }
 function renderChips(){
   const gc = genreCounts(), total = gc.reduce((a,[,n]) => a+n, 0);
   if (D.s.genre && !gc.some(([g]) => g === D.s.genre)) gc.unshift([D.s.genre, 0]);
-  $('#chips').innerHTML = `<button class="chip ${D.s.genre?'':'on'}" data-g="">All <small>${total}</small></button>` +
+  $('#chips').innerHTML = `<button class="chip ${D.s.genre?'':'on'}" data-g="">All genres <small>${total}</small></button>` +
     gc.map(([g,n]) => { const [l,e] = genreInfo(g); return `<button class="chip ${D.s.genre===g?'on':''}" data-g="${esc(g)}">${e} ${esc(l)} <small>${n}</small></button>`; }).join('');
 }
+function metaLine(p){
+  const [gl] = genreInfo(genreOf(p));
+  return [esc(gl), esc(p.priceLabel || PRICE[p.priceLevel] || ''), p.openNow === true ? '<span class="open">Open</span>' : p.openNow === false ? '<span class="closed">Closed</span>' : '']
+    .filter(Boolean).join(' · ');
+}
+const shortAddr = a => (a || '').replace(/,\s*(Brooklyn|New York|Queens|Long Island City|Astoria).*$/i,'');
 function card(p){
-  const m = me(p.id), [gl, ge] = genreInfo(genreOf(p)), s = p.rating;
-  const meta = [gl, p.priceLabel || PRICE[p.priceLevel], p.openNow === true ? '<span class="open">Open</span>' : p.openNow === false ? '<span class="closed">Closed</span>' : '']
-    .filter(Boolean).map(x => x.startsWith('<') ? x : esc(x)).join(' · ');
+  const m = me(p.id), ge = genreInfo(genreOf(p))[1], s = p.rating;
   const tags = [m.rating ? `<span class="me">You ★ ${m.rating}</span>` : '', m.fav ? '<span>♥ Saved</span>' : '', m.been ? '<span>✓ Been</span>' : '',
     p.source === 'mine' ? '<span>Added by you</span>' : '', m.hidden ? '<span>Hidden</span>' : ''].join('');
   return `<button class="card" data-id="${esc(p.id)}">
     <div class="emo">${ge}</div>
-    <div class="body"><h3>${esc(p.name)}</h3><div class="meta">${meta}</div>
-      <div class="meta">${esc((p.address||'').replace(/, Brooklyn.*$/,''))}</div>${tags ? `<div class="tags">${tags}</div>` : ''}</div>
+    <div class="body"><h3>${esc(p.name)}</h3><div class="meta">${metaLine(p)}</div>
+      <div class="meta">${esc(shortAddr(p.address))}</div>${tags ? `<div class="tags">${tags}</div>` : ''}</div>
     <div class="score">${s != null ? `<b><i>★</i> ${s.toFixed(1)}</b><small>${p.userRatingCount ? fmtN(p.userRatingCount) : p.source==='starter' ? 'approx' : 'Google'}</small>`
       : m.rating ? `<b><i>★</i> ${m.rating}</b><small>yours</small>` : '<small>no rating</small>'}</div>
   </button>`;
 }
-function renderList(){
-  const list = filtered(), n = list.length;
-  $('#count').textContent = `${n} place${n===1?'':'s'}` + (D.s.genre ? ` · ${genreInfo(D.s.genre)[0]}` : '');
-  if (!n) {
-    $('#list').innerHTML = `<div class="empty"><b>🥲</b>Nothing matches.<br>Try a lower rating or another genre.</div>`;
-    return;
+function tile(p){
+  const m = me(p.id), ge = genreInfo(genreOf(p))[1], s = p.rating;
+  return `<button class="tile" data-id="${esc(p.id)}">
+    ${m.rating ? `<span class="mk">You ★${m.rating}</span>` : m.fav ? '<span class="mk">♥</span>' : ''}
+    <div class="big">${ge}</div>
+    <h3>${esc(p.name)}</h3>
+    <div class="meta">${metaLine(p)}</div>
+    <div class="r">${s != null ? `<i>★</i> ${s.toFixed(1)} <small>${p.userRatingCount ? fmtN(p.userRatingCount) : p.source==='starter' ? 'approx' : ''}</small>`
+      : m.rating ? `<i>★</i> ${m.rating} <small>yours</small>` : '<small>no rating</small>'}</div>
+  </button>`;
+}
+function emptyHtml(){
+  if (!Object.keys(P()).length) {
+    const z = zoneInfo(D.s.zone);
+    return `<div class="empty"><b>🗺️</b>No places in ${esc(z.name)} yet.<br>${D.s.key ? 'Scan it to load every restaurant from Google Maps.' : 'Add a Google Maps key in settings to scan it.'}
+      <div><button class="mini" data-act="${D.s.key ? 'scan' : 'settings'}">${D.s.key ? 'Scan ' + esc(z.name) : 'Open settings'}</button></div></div>`;
   }
-  $('#list').innerHTML = list.slice(0, shown).map(card).join('') +
+  const any = q || D.s.genre || +D.s.minRating > 0 || D.s.view !== 'all';
+  return `<div class="empty"><b>🥲</b>${q ? `Nothing matches “${esc(q)}”.` : 'Nothing matches.'}<br>${q ? 'Check the search box.' : 'Try a lower rating or another genre.'}` +
+    (any ? `<div><button class="mini" data-act="clear">Clear filters</button></div>` : '') + `</div>`;
+}
+function renderList(){
+  const list = filtered(), n = list.length, layout = D.s.layout;
+  $('#count').textContent = `${n} place${n===1?'':'s'}` + (D.s.genre ? ` · ${genreInfo(D.s.genre)[0]}` : '');
+  $('#list').classList.toggle('hidden', layout === 'map');
+  $('#mapWrap').classList.toggle('hidden', layout !== 'map');
+  $('#addBtn').classList.toggle('hidden', layout === 'map');
+  if (layout === 'map') { renderMap(list); return; }
+  $('#list').classList.toggle('grid', layout === 'grid');
+  if (!n) { $('#list').innerHTML = emptyHtml(); return; }
+  const f = layout === 'grid' ? tile : card;
+  $('#list').innerHTML = list.slice(0, shown).map(f).join('') +
     (n > shown ? `<button class="more" id="more">Show ${Math.min(60, n-shown)} more</button>` : '');
 }
 function renderSync(){
-  const pill = $('#syncPill');
-  pill.classList.toggle('busy', syncing);
-  $('#syncTxt').textContent = syncing ? 'Scanning…' : D.s.lastSync ? 'Updated ' + ago(D.s.lastSync) : D.s.key ? 'Scan now' : 'Starter list';
+  $('#syncBtn').classList.toggle('busy', syncing);
+  const z = Z();
+  $('#syncTxt').textContent = syncing ? 'Scanning…' : z.lastSync ? ago(z.lastSync) : D.s.key ? 'Scan' : 'Starter list';
 }
 function renderBanner(){
+  if (syncing) return;
   const b = $('#banner');
-  if (syncing) return; // progress banner owns it
   if (!D.s.key && !D.s.dismissIntro) {
-    b.innerHTML = `<div class="banner"><div><b>Connect Google Maps</b>You're seeing a starter list. Add a Google Maps API key in settings and eat. will scan every Williamsburg restaurant and keep ratings fresh.<div style="margin-top:8px"><button class="btn dark" style="height:36px;flex:none;padding:0 14px;display:inline-flex" data-act="settings">Set it up</button></div></div><button class="x" data-act="dismiss" aria-label="Dismiss">×</button></div>`;
-  } else b.innerHTML = '';
+    b.innerHTML = `<div class="banner"><div><b>Connect Google Maps</b>Add a Google Maps key in settings to load every restaurant in the neighborhood and keep ratings fresh.<div><button class="mini" data-act="settings">Set it up</button></div></div><button class="x" data-act="dismiss" aria-label="Dismiss">×</button></div>`;
+  } else if (!b.querySelector('.err')) b.innerHTML = '';
 }
-function renderAll(){ renderRating(); renderChips(); renderList(); renderSync(); renderBanner(); buildReel(); }
+function renderAll(){ renderTop(); renderPresets(); renderChips(); renderList(); renderSync(); renderBanner(); buildReel(); }
+
+/* ---------------- map ---------------- */
+let map = null, markers = null, tiles = null, mapZone = null, leafletP = null;
+function loadLeaflet(){
+  if (window.L) return Promise.resolve();
+  return leafletP || (leafletP = new Promise((res, rej) => {
+    const css = document.createElement('link'); css.rel = 'stylesheet';
+    css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    s.onload = res; s.onerror = () => { leafletP = null; rej(new Error('The map could not load. Check your connection.')); }; document.head.appendChild(s);
+  }));
+}
+async function renderMap(list){
+  const withLoc = list.filter(p => p.location), missing = list.length - withLoc.length;
+  $('#mapNote').textContent = !list.length ? 'Nothing matches your filters.' :
+    missing ? `${missing} place${missing===1?' has':'s have'} no map position yet. ${D.s.key ? 'Scan this neighborhood to add them.' : 'A Google Maps scan adds positions.'}` : '';
+  try { await loadLeaflet(); } catch (e) { $('#mapNote').textContent = e.message; return; }
+  if (!map) {
+    map = L.map('map', { zoomControl:false });
+    tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map);
+    markers = L.layerGroup().addTo(map);
+    const zoomCls = () => $('#map').classList.toggle('far', map.getZoom() < 16);
+    map.on('zoomend', zoomCls); map.whenReady(zoomCls);
+  }
+  markers.clearLayers();
+  withLoc.forEach(p => {
+    const m = me(p.id), ge = genreInfo(genreOf(p))[1], s = score(p);
+    const icon = L.divIcon({ className:'pinwrap', iconSize:[0,0],
+      html:`<div class="pin ${m.rating || m.fav ? 'me' : ''}"><i>${ge}</i>${s != null ? `<b>${s.toFixed(1)}</b>` : ''}</div>` });
+    L.marker([p.location.latitude, p.location.longitude], { icon, title:p.name, riseOnHover:true })
+      .on('click', () => openDetail(p.id)).addTo(markers);
+  });
+  setTimeout(() => {
+    map.invalidateSize();
+    if (mapZone !== D.s.zone) {
+      mapZone = D.s.zone;
+      const b = zoneInfo(D.s.zone).b;
+      if (b) map.fitBounds([[b.low.latitude, b.low.longitude],[b.high.latitude, b.high.longitude]]);
+      else map.setView([40.73,-73.98], 13);
+    }
+  }, 30);
+}
 
 /* ---------------- slot machine ---------------- */
-const H = 56;
+const H = 38;
 let reelGenres = [], reelPos = 0, spinning = false;
-function buildReel(keepPos){
+const hash = s => { let h = 7; for (const c of s) h = (h*31 + c.charCodeAt(0)) | 0; return h; };
+function buildReel(){
   if (spinning) return;
-  const gc = genreCounts();
-  reelGenres = gc.map(([g]) => g);
-  $('#slotCount').textContent = reelGenres.length ? `${reelGenres.length} genres · ★ ${(+D.s.minRating).toFixed(1)}+` : '';
   const reel = $('#reel');
-  if (!reelGenres.length) { reel.innerHTML = `<div style="transform:translateY(${H}px)">No places</div>`; reel.style.transform=''; return; }
-  // shuffle a stable-ish order so the reel doesn't look sorted
-  const order = [...reelGenres].sort((a,b) => (hash(a) - hash(b)));
-  reelGenres = order;
-  const reps = 14;
-  reel.innerHTML = Array.from({length:reps}, () => order.map(g => { const [l,e] = genreInfo(g); return `<div><em>${e}</em>${esc(l)}</div>`; }).join('')).join('');
-  let idx = D.s.genre ? order.indexOf(D.s.genre) : 0; if (idx < 0) idx = 0;
-  idx += order.length; // start in the 2nd lap so there is a row above
-  reelPos = idx;
+  reelGenres = genreCounts().map(([g]) => g).sort((a,b) => hash(a) - hash(b));
+  if (!reelGenres.length) { reel.innerHTML = `<div style="transform:translateY(${H}px)">No places</div>`; reel.style.transform=''; $('#pickBtn').disabled = true; return; }
+  const n = reelGenres.length;
+  reel.innerHTML = Array.from({length:14}, () => reelGenres.map(g => { const [l,e] = genreInfo(g); return `<div><em>${e}</em>${esc(l)}</div>`; }).join('')).join('');
+  let idx = D.s.genre ? reelGenres.indexOf(D.s.genre) : 0; if (idx < 0) idx = 0;
+  reelPos = n + idx;
   reel.style.transition = 'none';
-  reel.style.transform = `translateY(${-(idx-1)*H}px)`;
+  reel.style.transform = `translateY(${-(reelPos-1)*H}px)`;
   $('#pickBtn').disabled = !filtered().length;
 }
-function hash(s){ let h = 7; for (const c of s) h = (h*31 + c.charCodeAt(0)) | 0; return h; }
 function spin(){
   if (spinning || !reelGenres.length) return;
   const n = reelGenres.length, reel = $('#reel'), slot = $('#slot');
   let target = Math.floor(Math.random() * n);
   if (n > 1 && reelGenres[target] === D.s.genre) target = (target + 1 + Math.floor(Math.random()*(n-1))) % n;
   const finalIdx = n * 11 + target;
-  spinning = true; $('#spinBtn').disabled = true; slot.classList.remove('won'); slot.classList.add('spinning');
+  spinning = true; $('#spinBtn').disabled = true; slot.classList.remove('won');
   $('#slotResult').textContent = '';
   reel.style.transition = 'none';
   reel.style.transform = `translateY(${-(reelPos-1)*H}px)`;
   void reel.offsetHeight;
-  const dur = 2600 + Math.random()*700;
+  const dur = 2400 + Math.random()*600;
   reel.style.transition = `transform ${dur}ms cubic-bezier(.12,.75,.12,1)`;
   reel.style.transform = `translateY(${-(finalIdx-1)*H}px)`;
-  let ticks = 0; const tick = setInterval(() => { if (navigator.vibrate) navigator.vibrate(4); if (++ticks > 20) clearInterval(tick); }, 90);
   setTimeout(() => {
-    clearInterval(tick);
-    spinning = false; $('#spinBtn').disabled = false;
-    slot.classList.remove('spinning'); slot.classList.add('won');
+    spinning = false; $('#spinBtn').disabled = false; slot.classList.add('won');
     if (navigator.vibrate) navigator.vibrate([30,40,60]);
-    const g = reelGenres[target];
-    D.s.genre = g; save(); shown = 60;
+    D.s.genre = reelGenres[target]; save(); shown = 60;
     reelPos = n + target;
     reel.style.transition = 'none';
     reel.style.transform = `translateY(${-(reelPos-1)*H}px)`;
     renderChips(); renderList();
-    const n2 = filtered().length, [l,e] = genreInfo(g);
-    $('#slotResult').textContent = `${e} ${l} it is · ${n2} spot${n2===1?'':'s'}`;
+    const n2 = filtered().length;
+    $('#slotResult').textContent = `${n2} spot${n2===1?'':'s'}`;
     $('#pickBtn').disabled = !n2;
   }, dur + 40);
 }
 function pickOne(){
   const list = filtered(); if (!list.length) return;
-  let pool = list;
-  if (list.length > 1 && lastPickId) pool = list.filter(p => p.id !== lastPickId);
+  const pool = list.length > 1 && lastPickId ? list.filter(p => p.id !== lastPickId) : list;
   const p = pool[Math.floor(Math.random() * pool.length)];
   lastPickId = p.id;
   openDetail(p.id, true);
@@ -551,33 +674,30 @@ function closeSheet(){
   const f = sheetClose; sheetClose = null; if (f) f();
   renderAll();
 }
-// swipe down to close
-(() => {
+(() => { // swipe down to close
   const sh = $('#sheet'); let y0 = null, dy = 0;
   sh.addEventListener('touchstart', e => { if (sh.scrollTop <= 0) { y0 = e.touches[0].clientY; dy = 0; } }, {passive:true});
   sh.addEventListener('touchmove', e => { if (y0 == null) return; dy = e.touches[0].clientY - y0; if (dy > 0) { sh.style.transition='none'; sh.style.transform=`translateY(${dy}px)`; } }, {passive:true});
   sh.addEventListener('touchend', () => { if (y0 == null) return; sh.style.transition=''; sh.style.transform=''; if (dy > 110) closeSheet(); y0 = null; });
 })();
 
-function starsHtml(v, attr='data-star'){ return [1,2,3,4,5].map(i => `<button ${attr}="${i}" class="${i<=v?'on':''}" aria-label="${i} star${i>1?'s':''}">★</button>`).join(''); }
+const starsHtml = v => [1,2,3,4,5].map(i => `<button data-star="${i}" class="${i<=v?'on':''}" aria-label="${i} star${i>1?'s':''}">★</button>`).join('');
 function mapsUrl(p){
   if (p.googleMapsUri) return p.googleMapsUri;
-  const qs = encodeURIComponent(p.name + ' ' + (p.address || 'Williamsburg Brooklyn'));
+  const qs = encodeURIComponent(p.name + ' ' + (p.address || zoneInfo(D.s.zone).name + ' New York'));
   return `https://www.google.com/maps/search/?api=1&query=${qs}` + (p.source==='google' ? `&query_place_id=${encodeURIComponent(p.id)}` : '');
 }
-function genreOptions(sel){
-  return Object.entries(GENRES).map(([k,[l,e]]) => `<option value="${k}" ${k===sel?'selected':''}>${e} ${l}</option>`).join('');
-}
+const genreOptions = sel => Object.entries(GENRES).map(([k,[l,e]]) => `<option value="${k}" ${k===sel?'selected':''}>${e} ${l}</option>`).join('');
 
 function openDetail(id, picked){
-  const p = D.places[id]; if (!p) return;
+  const p = P()[id]; if (!p) return;
   const m = me(id), [gl, ge] = genreInfo(genreOf(p));
   const price = p.priceLabel || PRICE[p.priceLevel] || '—';
   const dirUrl = p.location ? `https://www.google.com/maps/dir/?api=1&destination=${p.location.latitude},${p.location.longitude}` + (p.source==='google'?`&destination_place_id=${encodeURIComponent(p.id)}`:'') : mapsUrl(p);
   openSheet(`
     ${picked ? '<div class="pickflag">🎰 TONIGHT\'S PICK</div>' : ''}
     <h2>${ge} ${esc(p.name)}</h2>
-    <div class="sub">${esc(gl)} · ${esc(p.address || 'Williamsburg')}</div>
+    <div class="sub">${esc(gl)} · ${esc(p.address || zoneInfo(D.s.zone).name)}</div>
     <div class="stats">
       <div class="stat"><b>${p.rating != null ? '★ ' + p.rating.toFixed(1) : '—'}</b><small>${p.source==='starter' ? 'Google (approx)' : 'Google'}</small></div>
       <div class="stat"><b>${p.userRatingCount ? fmtN(p.userRatingCount) : '—'}</b><small>reviews</small></div>
@@ -596,41 +716,33 @@ function openDetail(id, picked){
         <button class="toggle ${m.been?'on':''}" data-tog="been">✓ Been there</button>
       </div>
     </div>
-    <div class="section">
-      <h4>Notes</h4>
-      <textarea class="in" id="note" placeholder="What to order, who to bring…" style="margin:0">${esc(m.note||'')}</textarea>
-    </div>
-    <div class="section">
-      <h4>Genre</h4>
-      <select class="in" id="genreSel" style="margin:0">${genreOptions(genreOf(p))}</select>
-    </div>
+    <div class="section"><h4>Notes</h4>
+      <textarea class="in" id="note" placeholder="What to order, who to bring…" style="margin:0">${esc(m.note||'')}</textarea></div>
+    <div class="section"><h4>Genre</h4>
+      <select class="in" id="genreSel" style="margin:0">${genreOptions(genreOf(p))}</select></div>
     <div class="btns">
-      ${p.source === 'mine'
-        ? '<button class="btn danger" data-act="delete">Delete</button>'
+      ${p.source === 'mine' ? '<button class="btn danger" data-act="delete">Delete</button>'
         : `<button class="btn danger" data-act="hide">${m.hidden ? 'Unhide' : 'Hide from list'}</button>`}
       <button class="btn dark" data-act="close">Done</button>
     </div>`);
   const sh = $('#sheet');
   sh.querySelector('#myStars').onclick = e => {
     const b = e.target.closest('[data-star]'); if (!b) return;
-    const v = +b.dataset.star, cur = me(id).rating || 0, nv = v === cur ? 0 : v;
+    const v = +b.dataset.star, nv = v === (me(id).rating || 0) ? 0 : v;
     setMine(id, {rating: nv || undefined, been: nv ? true : me(id).been});
     sh.querySelectorAll('#myStars button').forEach(x => x.classList.toggle('on', +x.dataset.star <= nv));
     sh.querySelector('[data-tog="been"]').classList.toggle('on', !!me(id).been);
-    if (navigator.vibrate) navigator.vibrate(8);
   };
-  sh.querySelectorAll('[data-tog]').forEach(b => b.onclick = () => {
-    const k = b.dataset.tog; setMine(id, {[k]: !me(id)[k]}); b.classList.toggle('on', !!me(id)[k]);
-  });
+  sh.querySelectorAll('[data-tog]').forEach(b => b.onclick = () => { const k = b.dataset.tog; setMine(id, {[k]: !me(id)[k]}); b.classList.toggle('on', !!me(id)[k]); });
   sh.querySelector('#note').oninput = e => setMine(id, {note: e.target.value});
   sh.querySelector('#genreSel').onchange = e => setMine(id, {genre: e.target.value});
   sh.querySelectorAll('[data-act]').forEach(b => b.onclick = () => {
     const a = b.dataset.act;
     if (a === 'close') closeSheet();
     else if (a === 'repick') pickOne();
-    else if (a === 'respin') { closeSheet(); window.scrollTo({top:0,behavior:'smooth'}); setTimeout(spin, 350); }
+    else if (a === 'respin') { D.s.slotOpen = true; save(); closeSheet(); window.scrollTo({top:0,behavior:'smooth'}); setTimeout(spin, 400); }
     else if (a === 'hide') { setMine(id, {hidden: !me(id).hidden}); toast(me(id).hidden ? 'Hidden' : 'Back in the list'); closeSheet(); }
-    else if (a === 'delete') { if (confirm(`Delete ${p.name}?`)) { delete D.places[id]; delete D.mine[id]; save(); toast('Deleted'); closeSheet(); } }
+    else if (a === 'delete') { if (confirm(`Delete ${p.name}?`)) { delete P()[id]; delete D.mine[id]; save(); toast('Deleted'); closeSheet(); } }
   });
 }
 
@@ -638,7 +750,7 @@ function openAdd(){
   let rating = 0, picked = null;
   openSheet(`
     <h2>Add a place</h2>
-    <div class="sub">Somewhere you love that's missing? Add it and rate it.</div>
+    <div class="sub">Missing somewhere you love? Add it to ${esc(zoneInfo(D.s.zone).name)} and rate it.</div>
     <label class="f" for="aName">Name</label>
     <input class="in" id="aName" placeholder="e.g. Grandma's Dumplings" autocomplete="off">
     ${D.s.key ? '<button class="btn" id="aLookup" style="width:100%;margin:-2px 0 12px">🔎 Find it on Google Maps</button><div class="results" id="aResults"></div>' : ''}
@@ -659,12 +771,12 @@ function openAdd(){
     const name = sh.querySelector('#aName').value.trim(); if (!name) { toast('Type a name first'); return; }
     lk.disabled = true; lk.textContent = 'Searching…';
     try {
-      const r = await searchText(name + ' Williamsburg Brooklyn', null, false);
+      const r = await searchText(name, zoneInfo(D.s.zone).b, null, false);
       const res = (r.places || []).map(fromGoogle).filter(Boolean).slice(0, 5);
-      const box = sh.querySelector('#aResults');
-      box.innerHTML = res.length ? res.map((p,i) => `<button data-i="${i}"><b>${esc(p.name)}</b>${p.rating!=null?'★ '+p.rating.toFixed(1)+' · ':''}${esc(p.address)}</button>`).join('') : '<div class="hint">No match on Google Maps. Fill it in by hand.</div>';
-      box.onclick = e => { const b = e.target.closest('[data-i]'); if (!b) return; picked = res[+b.dataset.i];
-        box.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+      const bx = sh.querySelector('#aResults');
+      bx.innerHTML = res.length ? res.map((p,i) => `<button data-i="${i}"><b>${esc(p.name)}</b>${p.rating!=null?'★ '+p.rating.toFixed(1)+' · ':''}${esc(p.address)}</button>`).join('') : '<div class="hint">No match on Google Maps. Fill it in by hand.</div>';
+      bx.onclick = e => { const b = e.target.closest('[data-i]'); if (!b) return; picked = res[+b.dataset.i];
+        bx.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
         sh.querySelector('#aName').value = picked.name; sh.querySelector('#aAddr').value = picked.address; sh.querySelector('#aGenre').value = GENRES[picked.genre] ? picked.genre : 'other'; };
     } catch (err) { toast(err.message); }
     lk.disabled = false; lk.textContent = '🔎 Find it on Google Maps';
@@ -674,30 +786,80 @@ function openAdd(){
     if (!name) { sh.querySelector('#aName').focus(); toast('Give it a name'); return; }
     const g = sh.querySelector('#aGenre').value, addr = sh.querySelector('#aAddr').value.trim(), note = sh.querySelector('#aNote').value.trim();
     let id;
-    if (picked && picked.name === name) { id = picked.id; D.places[id] = Object.assign(D.places[id] || {}, picked); }
-    else { id = 'mine-' + Date.now().toString(36); D.places[id] = { id, name, genre:g, address: addr ? (/brooklyn/i.test(addr) ? addr : addr + ', Brooklyn, NY') : '', source:'mine', added:Date.now() }; }
-    setMine(id, { rating: rating || undefined, note: note || undefined, genre: g !== (D.places[id].genre||'other') ? g : undefined, been: rating ? true : undefined });
-    D.s.genre = ''; D.s.view = 'all'; save(); $('#views').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === 'all'));
+    if (picked && picked.name === name) { id = picked.id; P()[id] = Object.assign(P()[id] || {}, picked); }
+    else { id = 'mine-' + Date.now().toString(36); P()[id] = { id, name, genre:g, address:addr, source:'mine', added:Date.now() }; }
+    setMine(id, { rating: rating || undefined, note: note || undefined, genre: g !== (P()[id].genre||'other') ? g : undefined, been: rating ? true : undefined });
+    D.s.genre = ''; D.s.view = 'all'; save();
     toast(`${name} added`); closeSheet();
   };
   setTimeout(() => sh.querySelector('#aName').focus(), 350);
 }
 
+function zoneRow(k){
+  const z = zoneInfo(k), d = D.zones[k], n = d ? Object.keys(d.places).length : 0;
+  return `<button class="zitem ${D.s.zone===k?'on':''}" data-z="${k}"><span>${esc(z.name)}</span><small>${d && d.lastSync ? `${n} places · ${ago(d.lastSync)}` : n ? `${n} places` : 'not scanned'}</small></button>`;
+}
+function openZones(){
+  const groups = {};
+  Object.entries(ZONES).forEach(([k, z]) => (groups[z.boro] = groups[z.boro] || []).push(k));
+  openSheet(`
+    <h2>Neighborhood</h2>
+    <div class="sub">Each neighborhood keeps its own list. Your ratings follow you everywhere. A neighborhood's first scan uses about 100 Google searches.</div>
+    <div class="zlist" id="zlist">
+      <button class="zitem ${D.s.zone==='near'?'on':''}" data-z="near"><span>📍 Near me</span><small>${D.s.near ? 'about 1 km around you' : 'uses your location'}</small></button>
+      ${Object.entries(groups).map(([boro, ks]) => `<h5>${boro}</h5>` + ks.map(zoneRow).join('')).join('')}
+    </div>`);
+  $('#sheet').querySelector('#zlist').onclick = async e => {
+    const b = e.target.closest('[data-z]'); if (!b) return;
+    const k = b.dataset.z;
+    if (k === 'near') { try { await locateMe(); } catch (err) { toast(err.message); return; } }
+    switchZone(k);
+  };
+}
+function locateMe(){
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej(new Error('Location is not available here'));
+    toast('Finding you…');
+    navigator.geolocation.getCurrentPosition(pos => {
+      const { latitude:la, longitude:lo } = pos.coords, old = D.s.near;
+      const moved = !old || Math.hypot((old.la - la) * 111, (old.lo - lo) * 84) > 0.4; // km
+      if (moved) { D.s.near = { la, lo, b: box(la - .0075, lo - .0100, la + .0075, lo + .0100) }; D.zones.near = { places:{}, lastSync:0 }; mapZone = null; }
+      save(); res();
+    }, () => rej(new Error('Location is blocked. Allow it for Safari in iPhone Settings.')), { enableHighAccuracy:false, timeout:12000, maximumAge:300000 });
+  });
+}
+function switchZone(k){
+  D.s.zone = k; D.s.genre = ''; shown = 60; save();
+  $('#banner').innerHTML = '';
+  closeSheet();
+  window.scrollTo({ top:0 });
+  if (D.s.key && !Z().lastSync && !Object.keys(P()).length) runSync(true);
+}
+
 function openSettings(){
-  const s = D.s, counts = Object.values(D.places).reduce((a,p) => (a[p.source]=(a[p.source]||0)+1, a), {});
-  const rated = Object.values(D.mine).filter(m => m.rating).length;
+  const s = D.s, places = Object.values(P()), counts = places.reduce((a,p) => (a[p.source]=(a[p.source]||0)+1, a), {});
+  const rated = Object.values(D.mine).filter(m => m.rating).length, z = zoneInfo(s.zone), skip = new Set(s.skipGenres);
   openSheet(`
     <h2>Settings</h2>
-    <div class="sub">${counts.google||0} from Google Maps · ${counts.mine||0} added by you · ${rated} rated${counts.starter?` · ${counts.starter} starter`:''}</div>
+    <div class="sub">${esc(z.name)}: ${counts.google||0} from Google Maps · ${counts.mine||0} added by you${counts.starter?` · ${counts.starter} starter`:''} · ${rated} rated overall</div>
+    <div class="section">
+      <h4>Neighborhood</h4>
+      <button class="btn" id="sZone" style="width:100%;justify-content:space-between;padding:0 14px">${esc(z.name)} <span style="color:var(--dim)">Change ›</span></button>
+    </div>
+    <div class="section">
+      <h4>Genres to skip</h4>
+      <div class="hint" style="margin:0 0 10px">Tap the ones you never want to see. They disappear from the list, map and slot machine.</div>
+      <div class="pills skip" id="sSkip" style="margin:0">${Object.entries(GENRES).map(([k,[l,e]]) => `<button data-g="${k}" class="${skip.has(k)?'on':''}">${e} ${l}</button>`).join('')}</div>
+    </div>
     <div class="section">
       <h4>Google Maps</h4>
       <label class="f" for="sKey">Places API key</label>
       <input class="in" id="sKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…" value="${esc(s.key)}">
-      <div class="hint">Stays on this phone only. Create one in Google Cloud: enable <b>Places API (New)</b>, then make an API key restricted to this site's address. Each full scan is about 100 searches, which fits inside Google's monthly free allowance at weekly refreshes.</div>
+      <div class="hint">Stays on this device. In Google Cloud, enable <b>Places API (New)</b> and make a key restricted to this site. A full scan of one neighborhood is about 100 searches; weekly refreshes stay inside Google's monthly free amount.</div>
       <label class="f">Auto refresh</label>
-      <div class="radio" id="sAuto">${[[0,'Off'],[1,'Daily'],[3,'Every 3 days'],[7,'Weekly'],[30,'Monthly']].map(([d,l]) => `<button data-d="${d}" class="${+s.autoDays===d?'on':''}">${l}</button>`).join('')}</div>
-      <button class="btn primary" id="sScan" style="width:100%" ${syncing?'disabled':''}>${syncing?'Scanning…':'Scan Williamsburg now'}</button>
-      <div class="hint" style="margin:10px 0 0">${s.lastSync ? 'Last scan ' + ago(s.lastSync) + '.' : 'Not scanned yet.'}</div>
+      <div class="pills" id="sAuto">${[[0,'Off'],[1,'Daily'],[3,'Every 3 days'],[7,'Weekly'],[30,'Monthly']].map(([d,l]) => `<button data-d="${d}" class="${+s.autoDays===d?'on':''}">${l}</button>`).join('')}</div>
+      <button class="btn primary" id="sScan" style="width:100%" ${syncing?'disabled':''}>${syncing?'Scanning…':'Scan ' + esc(z.name) + ' now'}</button>
+      <div class="hint" style="margin:10px 0 0">${Z().lastSync ? 'Last scan ' + ago(Z().lastSync) + '.' : 'Not scanned yet.'}</div>
     </div>
     <div class="section">
       <div class="switchrow"><span>Filter by my rating<small>When you've rated a place, your stars count instead of Google's.</small></span><button class="sw ${s.useMine?'on':''}" data-sw="useMine" aria-label="Filter by my rating"></button></div>
@@ -705,20 +867,27 @@ function openSettings(){
     </div>
     <div class="section">
       <h4>Your data</h4>
-      <div class="hint">Your ratings, notes and added places live on this device. Back them up now and then.</div>
+      <div class="hint">Ratings, notes and added places live on this device. Back them up now and then.</div>
       <div class="btns" style="margin:0"><button class="btn" id="sExport">Export</button><button class="btn" id="sImport">Import</button></div>
       <input type="file" id="sFile" accept="application/json,.json" class="hidden">
     </div>
     <div class="btns"><button class="btn danger" id="sReset">Reset app</button><button class="btn dark" data-act="close">Done</button></div>`);
-  const sh = $('#sheet');
-  const keyIn = sh.querySelector('#sKey');
+  const sh = $('#sheet'), keyIn = sh.querySelector('#sKey');
   keyIn.onchange = () => { D.s.key = keyIn.value.trim(); save(); };
+  sh.querySelector('#sZone').onclick = () => { D.s.key = keyIn.value.trim(); save(); openZones(); };
+  sh.querySelector('#sSkip').onclick = e => {
+    const b = e.target.closest('[data-g]'); if (!b) return;
+    const set = new Set(D.s.skipGenres), g = b.dataset.g;
+    set.has(g) ? set.delete(g) : set.add(g);
+    D.s.skipGenres = [...set]; if (set.has(D.s.genre)) D.s.genre = ''; save();
+    b.classList.toggle('on', set.has(g));
+  };
   sh.querySelector('#sAuto').onclick = e => { const b = e.target.closest('[data-d]'); if (!b) return; D.s.autoDays = +b.dataset.d; save(); sh.querySelectorAll('#sAuto button').forEach(x => x.classList.toggle('on', x === b)); };
   sh.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => { const k = b.dataset.sw; D.s[k] = !D.s[k]; save(); b.classList.toggle('on', D.s[k]); });
   sh.querySelector('#sScan').onclick = () => { D.s.key = keyIn.value.trim(); save(); if (!D.s.key) { toast('Paste your API key first'); keyIn.focus(); return; } closeSheet(); runSync(true); };
   sh.querySelector('#sExport').onclick = () => {
-    const blob = new Blob([JSON.stringify({ app:'eat', v:1, exported:new Date().toISOString(), mine:D.mine,
-      added:Object.values(D.places).filter(p => p.source === 'mine') }, null, 2)], {type:'application/json'});
+    const added = {}; Object.entries(D.zones).forEach(([k, z]) => { const a = Object.values(z.places).filter(p => p.source === 'mine'); if (a.length) added[k] = a; });
+    const blob = new Blob([JSON.stringify({ app:'eat', v:2, exported:new Date().toISOString(), mine:D.mine, added, skipGenres:D.s.skipGenres }, null, 2)], {type:'application/json'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `eat-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   };
@@ -727,8 +896,10 @@ function openSettings(){
     const f = e.target.files[0]; if (!f) return;
     try {
       const j = JSON.parse(await f.text()); if (j.app !== 'eat') throw new Error('Not an eat. backup');
-      (j.added || []).forEach(p => { D.places[p.id] = p; });
+      if (Array.isArray(j.added)) j.added.forEach(p => { Z('williamsburg').places[p.id] = p; }); // v1 backups
+      else Object.entries(j.added || {}).forEach(([k, list]) => list.forEach(p => { Z(k).places[p.id] = p; }));
       Object.entries(j.mine || {}).forEach(([id, m]) => { D.mine[id] = Object.assign({}, D.mine[id], m); });
+      if (Array.isArray(j.skipGenres)) D.s.skipGenres = j.skipGenres;
       save(); toast('Backup restored'); closeSheet();
     } catch (err) { toast(err.message || 'Could not read that file'); }
   };
@@ -737,10 +908,9 @@ function openSettings(){
 }
 
 /* ---------------- Google Places sync ---------------- */
-async function searchText(textQuery, pageToken, restrict = true){
+async function searchText(textQuery, bounds, pageToken, restrict = true){
   const body = { textQuery, pageSize:20 };
-  if (restrict) body.locationRestriction = { rectangle: BOUNDS };
-  else body.locationBias = { rectangle: BOUNDS };
+  if (bounds) body[restrict ? 'locationRestriction' : 'locationBias'] = { rectangle: bounds };
   if (pageToken) body.pageToken = pageToken;
   let res;
   try {
@@ -749,59 +919,73 @@ async function searchText(textQuery, pageToken, restrict = true){
     });
   } catch { throw new Error('No connection to Google Maps'); }
   const j = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(j.error?.message || `Google Maps error ${res.status}`);
+  if (!res.ok) throw new Error(explainGoogleError(j.error, res.status));
   return j;
+}
+function explainGoogleError(err, status){
+  const msg = err?.message || `Google Maps error ${status}`;
+  const reason = (err?.details || []).map(d => d.reason).find(Boolean) || '';
+  const t = reason + ' ' + msg;
+  const tip =
+    /SERVICE_BLOCKED|are blocked/i.test(t) ? 'Fix: in Google Cloud → Credentials → your API key → API restrictions, tick “Places API (New)” (it is separate from “Places API”), save, and wait a minute.' :
+    /REFERRER|referer/i.test(t) ? `Fix: in your API key's Website restrictions, add ${location.origin}/* and save.` :
+    /SERVICE_DISABLED|has not been used|is disabled/i.test(t) ? 'Fix: enable “Places API (New)” in this Google Cloud project, then wait a minute.' :
+    /BILLING/i.test(t) ? 'Fix: link a billing account to this Google Cloud project.' :
+    /API_KEY_INVALID|key not valid/i.test(t) ? 'Fix: the key looks wrong. Copy it again from Google Cloud → Credentials.' : '';
+  return tip ? `${msg} ${tip}` : msg;
 }
 function fromGoogle(g){
   if (!g || !g.id || g.businessStatus === 'CLOSED_PERMANENTLY') return null;
   const types = g.types || [];
   if (!FOOD_TYPES.test([g.primaryType, ...types].join(' '))) return null;
   return {
-    id:g.id, name:g.displayName?.text || 'Unnamed', address:g.formattedAddress || '', short:g.shortFormattedAddress,
+    id:g.id, name:g.displayName?.text || 'Unnamed', address:g.formattedAddress || '',
     rating:g.rating ?? null, userRatingCount:g.userRatingCount || 0, priceLevel:g.priceLevel, primaryType:g.primaryType,
-    typeLabel:g.primaryTypeDisplayName?.text, genre:genreFromTypes(g.primaryType, types), googleMapsUri:g.googleMapsUri,
+    genre:genreFromTypes(g.primaryType, types), googleMapsUri:g.googleMapsUri,
     location:g.location, openNow:g.currentOpeningHours?.openNow, source:'google', updated:Date.now()
   };
 }
-function setProgress(label, frac, found){
-  $('#banner').innerHTML = `<div class="banner"><div style="flex:1"><b>Scanning Google Maps…</b>${esc(label)} · ${found} places<div class="progress"><i style="width:${Math.round(frac*100)}%"></i></div></div></div>`;
+function setProgress(name, label, frac, found){
+  $('#banner').innerHTML = `<div class="banner"><div style="flex:1"><b>Scanning ${esc(name)}…</b>${esc(label)} · ${found} places<div class="progress"><i style="width:${Math.round(frac*100)}%"></i></div></div></div>`;
 }
 async function runSync(manual){
   if (syncing || !D.s.key) return;
+  const zk = D.s.zone, zi = zoneInfo(zk), zd = Z(zk);
+  if (!zi.b) { toast('Pick a neighborhood first'); return; }
   syncing = true; renderSync();
   const found = {};
   try {
     for (let i = 0; i < QUERIES.length; i++) {
       let token = null, page = 0;
       do {
-        setProgress(QUERIES[i], i / QUERIES.length, Object.keys(found).length);
-        const r = await searchText(QUERIES[i], token);
+        setProgress(zi.name, QUERIES[i], i / QUERIES.length, Object.keys(found).length);
+        const r = await searchText(QUERIES[i], zi.b, token);
         (r.places || []).forEach(g => { const p = fromGoogle(g); if (p) found[p.id] = p; });
         token = r.nextPageToken; page++;
       } while (token && page < 3);
     }
     const ids = Object.keys(found);
-    if (!ids.length) throw new Error('Google returned no places. Check that Places API (New) is enabled for this key.');
-    // carry starter ratings/notes over to the matching Google place, then drop the starter list
+    if (!ids.length) throw new Error('Google returned no places for this area.');
+    // starter places: move your ratings onto the matching Google place; keep ones you touched that have no match
     const byName = {}; ids.forEach(id => { byName[norm(found[id].name)] = id; });
-    Object.values(D.places).filter(p => p.source === 'starter').forEach(p => {
-      const gid = byName[norm(p.name)];
-      const m = D.mine[p.id], used = m && (m.rating || m.fav || m.been || m.note || m.genre);
-      if (gid) { if (m) D.mine[gid] = Object.assign({}, m, D.mine[gid]); delete D.mine[p.id]; delete D.places[p.id]; }
-      else if (used) p.source = 'mine'; // keep places you've touched, as your own
-      else { delete D.mine[p.id]; delete D.places[p.id]; }
+    Object.values(zd.places).filter(p => p.source === 'starter').forEach(p => {
+      const gid = byName[norm(p.name)], m = D.mine[p.id], used = m && (m.rating || m.fav || m.been || m.note || m.genre);
+      if (gid) { if (m) D.mine[gid] = Object.assign({}, m, D.mine[gid]); delete D.mine[p.id]; delete zd.places[p.id]; }
+      else if (used) p.source = 'mine';
+      else { delete D.mine[p.id]; delete zd.places[p.id]; }
     });
-    ids.forEach(id => { D.places[id] = Object.assign({}, D.places[id], found[id]); });
-    // Google places not seen in this scan for 3+ scans are dropped (likely closed), unless you rated/saved them
-    Object.values(D.places).forEach(p => {
+    ids.forEach(id => { zd.places[id] = Object.assign({}, zd.places[id], found[id]); delete zd.places[id].missed; });
+    // drop Google places missing from 3 scans in a row, unless you rated, saved or noted them
+    Object.values(zd.places).forEach(p => {
       if (p.source !== 'google' || found[p.id]) return;
       p.missed = (p.missed || 0) + 1;
       const m = D.mine[p.id];
-      if (p.missed >= 3 && !(m && (m.rating || m.fav || m.note))) delete D.places[p.id];
+      if (p.missed >= 3 && !(m && (m.rating || m.fav || m.note))) delete zd.places[p.id];
     });
-    ids.forEach(id => { delete D.places[id].missed; });
-    D.s.lastSync = Date.now(); save();
-    toast(`${ids.length} Williamsburg spots loaded`);
+    zd.lastSync = Date.now();
+    if (D.s.genre && !Object.values(zd.places).some(p => genreOf(p) === D.s.genre)) D.s.genre = '';
+    save();
+    toast(`${ids.length} ${zi.name} spots loaded`);
   } catch (err) {
     syncing = false;
     $('#banner').innerHTML = `<div class="banner err"><div><b>Scan stopped</b>${esc(err.message)}</div><button class="x" data-act="clearbanner" aria-label="Dismiss">×</button></div>`;
@@ -812,41 +996,46 @@ async function runSync(manual){
   syncing = false; $('#banner').innerHTML = ''; shown = 60; renderAll();
 }
 function maybeAutoSync(){
-  if (!D.s.key || !D.s.autoDays || syncing) return;
-  if (Date.now() - (D.s.lastSync || 0) > D.s.autoDays * 864e5) runSync(false);
+  const z = Z();
+  if (!D.s.key || !D.s.autoDays || syncing || !z.lastSync) return; // a neighborhood's first scan is always your choice
+  if (Date.now() - z.lastSync > D.s.autoDays * 864e5) runSync(false);
 }
 
 /* ---------------- events ---------------- */
-$('#minRating').addEventListener('input', e => { D.s.minRating = +e.target.value <= 3 ? 0 : +e.target.value; shown = 60; save(); renderRating(); renderChips(); renderList(); });
-$('#minRating').addEventListener('change', () => buildReel());
-$('#presets').onclick = e => { const b = e.target.closest('[data-r]'); if (!b) return; D.s.minRating = +b.dataset.r; shown = 60; save(); renderAll(); };
+$('#presets').onclick = e => { const b = e.target.closest('[data-r]'); if (!b) return; D.s.minRating = +b.dataset.r; shown = 60; save(); renderPresets(); renderChips(); renderList(); buildReel(); };
 $('#q').addEventListener('input', e => { q = e.target.value; shown = 60; renderChips(); renderList(); clearTimeout(buildReel.t); buildReel.t = setTimeout(buildReel, 300); });
 $('#chips').onclick = e => { const b = e.target.closest('[data-g]'); if (!b) return; D.s.genre = D.s.genre === b.dataset.g ? '' : b.dataset.g; shown = 60; save(); $('#slotResult').textContent=''; renderChips(); renderList(); buildReel(); };
-$('#views').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; D.s.view = b.dataset.v; shown = 60; save(); $('#views').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderChips(); renderList(); buildReel(); };
+$('#views').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; D.s.view = b.dataset.v; shown = 60; save(); renderTop(); renderChips(); renderList(); buildReel(); };
+$('#layout').onclick = e => { const b = e.target.closest('[data-l]'); if (!b) return; D.s.layout = b.dataset.l; shown = 60; save(); renderTop(); renderList(); };
 $('#sort').onchange = e => { D.s.sort = e.target.value; save(); renderList(); };
+$('#slotToggle').onclick = () => { D.s.slotOpen = !D.s.slotOpen; save(); renderTop(); if (D.s.slotOpen) buildReel(); };
+function onAct(a){
+  if (a === 'settings') openSettings();
+  else if (a === 'scan') runSync(true);
+  else if (a === 'dismiss') { D.s.dismissIntro = true; save(); renderBanner(); }
+  else if (a === 'clearbanner') { $('#banner').innerHTML = ''; renderBanner(); }
+  else if (a === 'clear') { q = ''; $('#q').value = ''; D.s.genre = ''; D.s.view = 'all'; D.s.minRating = 0; save(); renderAll(); }
+}
 $('#list').onclick = e => {
   if (e.target.id === 'more') { shown += 60; renderList(); return; }
-  const c = e.target.closest('.card'); if (c) openDetail(c.dataset.id);
+  const a = e.target.closest('[data-act]'); if (a) { onAct(a.dataset.act); return; }
+  const c = e.target.closest('[data-id]'); if (c) openDetail(c.dataset.id);
 };
+$('#banner').onclick = e => { const a = e.target.closest('[data-act]'); if (a) onAct(a.dataset.act); };
 $('#spinBtn').onclick = spin;
 $('#pickBtn').onclick = pickOne;
 $('#addBtn').onclick = openAdd;
 $('#openSettings').onclick = openSettings;
-$('#syncPill').onclick = () => D.s.key ? runSync(true) : openSettings();
+$('#zoneBtn').onclick = openZones;
+$('#syncBtn').onclick = () => D.s.key ? runSync(true) : openSettings();
 $('#scrim').onclick = closeSheet;
-$('#banner').onclick = e => {
-  const a = e.target.closest('[data-act]')?.dataset.act;
-  if (a === 'settings') openSettings();
-  if (a === 'dismiss') { D.s.dismissIntro = true; save(); renderBanner(); }
-  if (a === 'clearbanner') renderBanner();
-};
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#sheet').classList.contains('on')) closeSheet(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderSync(); maybeAutoSync(); } });
 setInterval(renderSync, 60000);
 
 // init
-$('#sort').value = D.s.sort;
-$('#views').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === D.s.view));
+$('#q').value = ''; q = '';
+window.addEventListener('pageshow', () => { if ($('#q').value !== q) { $('#q').value = ''; q = ''; renderList(); } });
 renderAll();
 maybeAutoSync();
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
