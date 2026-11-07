@@ -147,7 +147,7 @@ svg{display:block}
 .more{width:100%;height:44px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);font-weight:700;margin-top:4px}
 
 /* map */
-#map{height:calc(100dvh - 300px);min-height:340px;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);background:var(--soft);z-index:0}
+#map{height:420px;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);background:var(--soft);z-index:0}
 .mapnote{font-size:12.5px;color:var(--dim);margin-top:8px;text-align:center}
 .pinwrap{background:none;border:0}
 .pin{position:absolute;transform:translate(-50%,-100%);margin-top:-6px;display:flex;align-items:center;gap:3px;padding:3px 7px 3px 4px;border-radius:99px;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.25);font:800 12px var(--font);color:var(--ink);white-space:nowrap}
@@ -159,8 +159,7 @@ svg{display:block}
 #map.far .pin b{display:none}
 #map.far .pin i{font-size:14px}
 .leaflet-control-attribution{font:10px var(--font)!important}
-#map .leaflet-tile-pane{filter:saturate(.75) contrast(.95)}
-@media (prefers-color-scheme: dark){#map .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.5)}#map{background:#1b1a18}}
+@media (prefers-color-scheme: dark){#map{background:#242424}}
 
 .fab{position:fixed;right:max(16px,calc(50% - 344px));bottom:calc(var(--safe-b) + 18px);width:54px;height:54px;border-radius:18px;background:var(--ink);color:var(--bg);display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:30;transition:transform .15s var(--ease)}
 .fab:active{transform:scale(.92)}
@@ -364,33 +363,34 @@ const TYPE_MAP = [
 ];
 const PRICE = {PRICE_LEVEL_FREE:'Free',PRICE_LEVEL_INEXPENSIVE:'$',PRICE_LEVEL_MODERATE:'$$',PRICE_LEVEL_EXPENSIVE:'$$$',PRICE_LEVEL_VERY_EXPENSIVE:'$$$$'};
 
-// Starter list for Williamsburg, shown before the first Google Maps scan. Ratings are approximate.
+// Starter list for Williamsburg, shown before the first Google Maps scan. Ratings are approximate;
+// positions come from OpenStreetMap address lookups.
 const SEED = [
-  ['Lilia','italian','567 Union Ave',4.6,'$$$'],['Peter Luger Steak House','steak','178 Broadway',4.4,'$$$$'],
-  ["L'Industrie Pizzeria",'pizza','254 S 2nd St',4.7,'$'],['Best Pizza','pizza','33 Havemeyer St',4.5,'$'],
-  ["Joe's Pizza",'pizza','216 Bedford Ave',4.5,'$'],["Vinnie's Pizzeria",'pizza','148 Bedford Ave',4.4,'$'],
-  ['Fornino','pizza','187 Bedford Ave',4.3,'$$'],['Emmy Squared','pizza','364 Grand St',4.5,'$$'],
-  ['Diner','american','85 Broadway',4.5,'$$$'],['Marlow & Sons','american','81 Broadway',4.4,'$$$'],
-  ['Llama Inn','latin','50 Withers St',4.5,'$$$'],['Misi','italian','329 Kent Ave',4.6,'$$$'],
-  ['Le Crocodile','french','80 Wythe Ave',4.4,'$$$'],['Francie','french','134 Broadway',4.6,'$$$$'],
-  ['Sunday in Brooklyn','brunch','348 Wythe Ave',4.5,'$$'],['Café Mogador','middle_eastern','133 Wythe Ave',4.5,'$$'],
-  ["Bamonte's",'italian','32 Withers St',4.5,'$$$'],['Aurora','italian','70 Grand St',4.5,'$$'],
-  ['Antica Pesa','italian','115 Berry St',4.5,'$$$'],['Barano','italian','26 Broadway',4.6,'$$$'],
-  ['Leuca','italian','111 N 12th St',4.4,'$$$'],['Rabbit Hole','brunch','352 Bedford Ave',4.5,'$$'],
-  ['Okonomi','japanese','150 Ainslie St',4.6,'$$'],['Shalom Japan','japanese','310 S 4th St',4.5,'$$$'],
-  ['Samurai Mama','japanese','205 Grand St',4.5,'$$'],['Bozu','japanese','296 Grand St',4.5,'$$'],
-  ['SEA Thai','thai','114 N 6th St',4.4,'$$'],['Kru','thai','190 N 14th St',4.6,'$$$'],['Zaab Zaab','thai','Grand St',4.5,'$$'],
-  ['Sweet Chick','american','164 Bedford Ave',4.4,'$$'],['El Almacen','latin','557 Driggs Ave',4.5,'$$'],
-  ['Mesa Coyoacan','mexican','372 Graham Ave',4.5,'$$'],['La Superior','mexican','295 Berry St',4.5,'$'],
-  ['Bakeri','bakery','150 Wythe Ave',4.5,'$'],["Martha's Country Bakery",'bakery','263 Bedford Ave',4.5,'$'],
-  ['Fette Sau','bbq','354 Metropolitan Ave',4.5,'$$'],["Mable's Smokehouse",'bbq','44 Berry St',4.5,'$$'],
-  ['Kings County Imperial','chinese','20 Skillman Ave',4.5,'$$'],['Win Son','chinese','159 Graham Ave',4.5,'$$'],
-  ['Birds of a Feather','chinese','191 Grand St',4.5,'$$'],['Maison Premiere','seafood','298 Bedford Ave',4.6,'$$$'],
-  ['Extra Fancy','seafood','302 Metropolitan Ave',4.4,'$$'],['St. Anselm','steak','355 Metropolitan Ave',4.6,'$$$'],
-  ['Laser Wolf','middle_eastern','97 Wythe Ave',4.5,'$$$'],['The Four Horsemen','wine','295 Grand St',4.6,'$$$'],
-  ['Bagelsmith','deli','189 Bedford Ave',4.4,'$'],['Devoción','cafe','69 Grand St',4.6,'$$'],
-  ['Partners Coffee','cafe','125 N 6th St',4.5,'$$'],["Kellogg's Diner",'diner','518 Metropolitan Ave',4.2,'$$'],
-  ['Fortunato Brothers','dessert','289 Manhattan Ave',4.5,'$']
+  ['Lilia','italian','567 Union Ave',4.6,'$$$',40.71762,-73.9524],['Peter Luger Steak House','steak','178 Broadway',4.4,'$$$$',40.70987,-73.96256],
+  ["L'Industrie Pizzeria",'pizza','254 S 2nd St',4.7,'$',40.71161,-73.95783],['Best Pizza','pizza','33 Havemeyer St',4.5,'$',40.71558,-73.95343],
+  ["Joe's Pizza",'pizza','216 Bedford Ave',4.5,'$',40.71687,-73.95892],["Vinnie's Pizzeria",'pizza','148 Bedford Ave',4.4,'$',40.7189,-73.95684],
+  ['Fornino','pizza','187 Bedford Ave',4.3,'$$',40.71756,-73.95771],['Emmy Squared','pizza','364 Grand St',4.5,'$$',40.71223,-73.95567],
+  ['Diner','american','85 Broadway',4.5,'$$$',40.71069,-73.96561],['Marlow & Sons','american','81 Broadway',4.4,'$$$',40.71071,-73.9657],
+  ['Llama Inn','latin','50 Withers St',4.5,'$$$',40.71662,-73.95049],['Misi','italian','329 Kent Ave',4.6,'$$$',40.7134,-73.96722],
+  ['Le Crocodile','french','80 Wythe Ave',4.4,'$$$',40.7219,-73.95806],['Francie','french','134 Broadway',4.6,'$$$$',40.71016,-73.96413],
+  ['Sunday in Brooklyn','brunch','348 Wythe Ave',4.5,'$$',40.7142,-73.9653],['Café Mogador','middle_eastern','133 Wythe Ave',4.5,'$$',40.71973,-73.95996],
+  ["Bamonte's",'italian','32 Withers St',4.5,'$$$',40.71645,-73.95119],['Aurora','italian','70 Grand St',4.5,'$$',40.71559,-73.96478],
+  ['Antica Pesa','italian','115 Berry St',4.5,'$$$',40.71882,-73.95864],['Barano','italian','26 Broadway',4.6,'$$$',40.71057,-73.96788],
+  ['Leuca','italian','111 N 12th St',4.4,'$$$',40.72241,-73.95692],['Rabbit Hole','brunch','352 Bedford Ave',4.5,'$$',40.71232,-73.96295],
+  ['Okonomi','japanese','150 Ainslie St',4.6,'$$',40.71256,-73.94874],['Shalom Japan','japanese','310 S 4th St',4.5,'$$$',40.7092,-73.95584],
+  ['Samurai Mama','japanese','205 Grand St',4.5,'$$',40.71415,-73.96014],['Bozu','japanese','296 Grand St',4.5,'$$',40.71286,-73.95751],
+  ['SEA Thai','thai','114 N 6th St',4.4,'$$',40.71807,-73.96004],['Kru','thai','190 N 14th St',4.6,'$$$',40.72282,-73.95579],['Zaab Zaab','thai','Grand St',4.5,'$$',40.71398,-73.96032],
+  ['Sweet Chick','american','164 Bedford Ave',4.4,'$$',40.71835,-73.95732],['El Almacen','latin','557 Driggs Ave',4.5,'$$',40.71695,-73.95663],
+  ['Mesa Coyoacan','mexican','372 Graham Ave',4.5,'$$',40.71553,-73.94427],['La Superior','mexican','295 Berry St',4.5,'$',40.71357,-73.9636],
+  ['Bakeri','bakery','150 Wythe Ave',4.5,'$',40.72002,-73.9601],["Martha's Country Bakery",'bakery','263 Bedford Ave',4.5,'$',40.71497,-73.96064],
+  ['Fette Sau','bbq','354 Metropolitan Ave',4.5,'$$',40.71388,-73.95649],["Mable's Smokehouse",'bbq','44 Berry St',4.5,'$$',40.72111,-73.95664],
+  ['Kings County Imperial','chinese','20 Skillman Ave',4.5,'$$',40.71519,-73.95098],['Win Son','chinese','159 Graham Ave',4.5,'$$',40.70745,-73.9434],
+  ['Birds of a Feather','chinese','191 Grand St',4.5,'$$',40.71431,-73.96053],['Maison Premiere','seafood','298 Bedford Ave',4.6,'$$$',40.71426,-73.96165],
+  ['Extra Fancy','seafood','302 Metropolitan Ave',4.4,'$$',40.71439,-73.95794],['St. Anselm','steak','355 Metropolitan Ave',4.6,'$$$',40.71427,-73.95604],
+  ['Laser Wolf','middle_eastern','97 Wythe Ave',4.5,'$$$',40.72083,-73.95878],['The Four Horsemen','wine','295 Grand St',4.6,'$$$',40.71316,-73.95725],
+  ['Bagelsmith','deli','189 Bedford Ave',4.4,'$',40.7175,-73.95778],['Devoción','cafe','69 Grand St',4.6,'$$',40.71589,-73.96469],
+  ['Partners Coffee','cafe','125 N 6th St',4.5,'$$',40.71797,-73.95918],["Kellogg's Diner",'diner','518 Metropolitan Ave',4.2,'$$',40.71387,-73.95182],
+  ['Fortunato Brothers','dessert','289 Manhattan Ave',4.5,'$',40.71378,-73.94619]
 ];
 
 /* ---------------- state ---------------- */
@@ -400,9 +400,9 @@ let D;
 try { D = JSON.parse(localStorage.getItem(LS)) || null; } catch { D = null; }
 if (!D) {
   D = { v:2, zones:{ williamsburg:{ places:{}, lastSync:0 } }, mine:{}, s:defaults() };
-  SEED.forEach(([name, g, addr, rating, price], i) => {
+  SEED.forEach(([name, g, addr, rating, price, la, lo], i) => {
     const id = 'starter-' + i;
-    D.zones.williamsburg.places[id] = { id, name, genre:g, address:addr + ', Brooklyn, NY', rating, priceLabel:price, source:'starter' };
+    D.zones.williamsburg.places[id] = { id, name, genre:g, address:addr + ', Brooklyn, NY', rating, priceLabel:price, source:'starter', location:{ latitude:la, longitude:lo } };
   });
 }
 if (!D.zones) { // v1 -> v2: one neighborhood -> many
@@ -412,6 +412,12 @@ if (!D.zones) { // v1 -> v2: one neighborhood -> many
 D.mine = D.mine || {};
 D.s = Object.assign(defaults(), D.s || {});
 delete D.s.lastSync;
+// starter places saved before they had map positions
+Object.values(D.zones.williamsburg ? D.zones.williamsburg.places : {}).forEach(p => {
+  if (p.location || !/^starter-\d+$/.test(p.id)) return;
+  const r = SEED[+p.id.slice(8)];
+  if (r && r[0] === p.name) p.location = { latitude:r[5], longitude:r[6] };
+});
 if (D.s.zone !== 'near' && !ZONES[D.s.zone]) D.s.zone = 'williamsburg';
 const save = () => { try { localStorage.setItem(LS, JSON.stringify(D)); } catch {} };
 save();
@@ -566,6 +572,11 @@ function renderAll(){ renderTop(); renderPresets(); renderChips(); renderList();
 
 /* ---------------- map ---------------- */
 let map = null, markers = null, tiles = null, mapZone = null, leafletP = null;
+const dark = matchMedia('(prefers-color-scheme: dark)');
+function sizeMap(){ // fill the screen below the toolbar
+  const el = $('#map'), top = el.getBoundingClientRect().top + window.scrollY;
+  el.style.height = Math.round(Math.max(window.innerHeight * .62, window.innerHeight - top - 24)) + 'px';
+}
 function loadLeaflet(){
   if (window.L) return Promise.resolve();
   return leafletP || (leafletP = new Promise((res, rej) => {
@@ -578,11 +589,16 @@ function loadLeaflet(){
 async function renderMap(list){
   const withLoc = list.filter(p => p.location), missing = list.length - withLoc.length;
   $('#mapNote').textContent = !list.length ? 'Nothing matches your filters.' :
-    missing ? `${missing} place${missing===1?' has':'s have'} no map position yet. ${D.s.key ? 'Scan this neighborhood to add them.' : 'A Google Maps scan adds positions.'}` : '';
+    missing ? `${missing} place${missing===1?' has':'s have'} no map position yet.` : '';
   try { await loadLeaflet(); } catch (e) { $('#mapNote').textContent = e.message; return; }
   if (!map) {
     map = L.map('map', { zoomControl:false });
-    tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map);
+    const esri = n => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${n}/MapServer/tile/{z}/{y}/{x}`;
+    const tone = () => dark.matches ? 'Dark_Gray' : 'Light_Gray';
+    const opt = { maxZoom:19, maxNativeZoom:16 };
+    tiles = [L.tileLayer(esri(tone() + '_Base'), { ...opt, attribution:'Tiles © Esri, HERE, Garmin, © OpenStreetMap contributors' }).addTo(map),
+             L.tileLayer(esri(tone() + '_Reference'), opt).addTo(map)];
+    if (dark.addEventListener) dark.addEventListener('change', () => { tiles[0].setUrl(esri(tone() + '_Base')); tiles[1].setUrl(esri(tone() + '_Reference')); });
     markers = L.layerGroup().addTo(map);
     const zoomCls = () => $('#map').classList.toggle('far', map.getZoom() < 16);
     map.on('zoomend', zoomCls); map.whenReady(zoomCls);
@@ -596,11 +612,12 @@ async function renderMap(list){
       .on('click', () => openDetail(p.id)).addTo(markers);
   });
   setTimeout(() => {
-    map.invalidateSize();
+    sizeMap(); map.invalidateSize();
     if (mapZone !== D.s.zone) {
       mapZone = D.s.zone;
       const b = zoneInfo(D.s.zone).b;
-      if (b) map.fitBounds([[b.low.latitude, b.low.longitude],[b.high.latitude, b.high.longitude]]);
+      if (withLoc.length >= 3) map.fitBounds(withLoc.map(p => [p.location.latitude, p.location.longitude]), { padding:[24,24], maxZoom:16 });
+      else if (b) map.fitBounds([[b.low.latitude, b.low.longitude],[b.high.latitude, b.high.longitude]]);
       else map.setView([40.73,-73.98], 13);
     }
   }, 30);
@@ -1035,6 +1052,7 @@ setInterval(renderSync, 60000);
 
 // init
 $('#q').value = ''; q = '';
+window.addEventListener('resize', () => { if (map && D.s.layout === 'map') { sizeMap(); map.invalidateSize(); } });
 window.addEventListener('pageshow', () => { if ($('#q').value !== q) { $('#q').value = ''; q = ''; renderList(); } });
 renderAll();
 maybeAutoSync();
