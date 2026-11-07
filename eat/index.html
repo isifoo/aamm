@@ -139,11 +139,17 @@ svg{display:block}
 .tile .r{margin-top:auto;padding-top:8px;font-size:14px;font-weight:800;display:flex;align-items:baseline;gap:5px}
 .tile .r small{font-weight:600;color:var(--dim);font-size:11.5px}
 .tile .mk{position:absolute;top:10px;right:10px;font-size:12px;font-weight:800;color:#a76800}
-.list.grid .empty,.list.grid .more{grid-column:1/-1}
+.list.grid .empty,.list.grid .mini.gm{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px;border-radius:12px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;text-decoration:none;margin-top:12px}
+.gmrow{text-align:center}
+.list.grid .gmrow{grid-column:1/-1}
+.more{grid-column:1/-1}
 
 .empty{text-align:center;color:var(--dim);padding:36px 20px}
 .empty b{display:block;font-size:36px;margin-bottom:6px}
 .empty .mini{margin-top:12px;height:38px;padding:0 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-weight:700}
+.mini.gm{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px;border-radius:12px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;text-decoration:none;margin-top:12px}
+.gmrow{text-align:center}
+.list.grid .gmrow{grid-column:1/-1}
 .more{width:100%;height:44px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);font-weight:700;margin-top:4px}
 
 /* map */
@@ -402,7 +408,7 @@ function baseList(){
     if (v === 'been' && !m.been) return false;
     if (v === 'todo' && m.been) return false;
     if (v === 'mine' && p.source !== 'mine') return false;
-    if (min > 0) { const s = score(p); if (s == null || s < min) return false; }
+    if (min > 0 && !qq) { const s = score(p); if (s == null || s < min) return false; } // a search shows every match
     if (qq && !norm(p.name + p.address + genreInfo(g)[0] + (m.note||'')).includes(qq)) return false;
     return true;
   });
@@ -485,8 +491,16 @@ function emptyHtml(){
       <div><button class="mini" data-act="${D.s.key ? 'scan' : 'settings'}">${D.s.key ? 'Scan ' + esc(z.name) : 'Open settings'}</button></div></div>`;
   }
   const any = q || D.s.genre || +D.s.minRating > 0 || D.s.view !== 'all';
-  return `<div class="empty"><b>🥲</b>${q ? `Nothing matches “${esc(q)}”.` : 'Nothing matches.'}<br>${q ? 'Check the search box.' : 'Try a lower rating or another genre.'}` +
-    (any ? `<div><button class="mini" data-act="clear">Clear filters</button></div>` : '') + `</div>`;
+  return `<div class="empty"><b>🥲</b>${q ? `Nothing here matches “${esc(q)}”.` : 'Nothing matches.'}<br>${q ? 'Try Google Maps instead:' : 'Try a lower rating or another genre.'}` +
+    (q ? `<div>${gmapsSearchBtn()}</div>` : '') +
+    (any ? `<div><button class="mini" data-act="clear" style="background:var(--soft);color:var(--ink)">Clear filters</button></div>` : '') + `</div>`;
+}
+// Opens Google Maps (the app on iPhone) with the search, limited to this neighborhood. Free: no key involved.
+function gmapsSearchBtn(){
+  const z = zoneInfo(D.s.zone), b = z.b;
+  const where = b ? `@${((b.low.latitude + b.high.latitude) / 2).toFixed(4)},${((b.low.longitude + b.high.longitude) / 2).toFixed(4)},15z` : '';
+  const url = `https://www.google.com/maps/search/${encodeURIComponent(q + ' ' + (D.s.zone === 'near' ? '' : z.name + ' NYC'))}/${where}`;
+  return `<a class="mini gm" href="${esc(url)}" target="_blank" rel="noopener">🔎 Search Google Maps for “${esc(q)}”</a>`;
 }
 function renderList(){
   const list = filtered(), n = list.length, layout = D.s.layout;
@@ -499,7 +513,8 @@ function renderList(){
   if (!n) { $('#list').innerHTML = emptyHtml(); return; }
   const f = layout === 'grid' ? tile : card;
   $('#list').innerHTML = list.slice(0, shown).map(f).join('') +
-    (n > shown ? `<button class="more" id="more">Show ${Math.min(60, n-shown)} more</button>` : '');
+    (n > shown ? `<button class="more" id="more">Show ${Math.min(60, n-shown)} more</button>` : '') +
+    (q ? `<div class="gmrow">${gmapsSearchBtn()}</div>` : '');
 }
 function renderSync(){
   $('#syncBtn').classList.toggle('busy', syncing);
