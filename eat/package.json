@@ -1,0 +1,1 @@
+{ "private": true, "type": "module", "description": "Lets Node load core.js as a module for the weekly scan." }

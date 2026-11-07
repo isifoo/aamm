@@ -28,12 +28,18 @@ A phone-first web app for picking where to eat in New York. It lives in `eat/` a
 - **Slot machine**: the 🎰 button shows or hides a small reel that spins through the genres that pass your filters; "Pick a spot" then chooses a restaurant.
 - **Your own data**: add places, give them stars, notes, saved and been-there flags. "Filter by my rating" makes your stars override Google's.
 
-## Set up the Google Maps scan
-1. In Google Cloud, create a project, link billing, and enable **Places API (New)**.
-2. Create an API key. Restrict it to *Places API (New)* and to the site address (`https://isifoo.github.io/*`).
-3. Open eat., tap the settings button, paste the key, and tap **Scan … now**.
+## Weekly Google Maps scan (no key on your phone)
+GitHub scans the neighborhoods in `eat/scan-config.json` every Monday with `.github/workflows/eat-scan.yml`, and saves the results to `eat/data/`. The page reads those files, so phones never need a Google key.
 
-The key, your ratings and your added places are stored only in that browser (localStorage). Use Settings → Export to back them up. One neighborhood scan is roughly 40–120 Text Search requests, billed as Text Search Enterprise (1,000 free a month, then about $35 per 1,000). A weekly refresh of one neighborhood stays inside the free amount.
+1. In Google Cloud, link billing, enable **Places API (New)**, and create an API key restricted to *Places API (New)*. A key that is also restricted to `https://isifoo.github.io/*` works too; the scan sends that address.
+2. In this repo on GitHub: **Settings → Secrets and variables → Actions → New repository secret**, name it `EAT_GOOGLE_KEY` and paste the key.
+3. **Actions → eat weekly scan → Run workflow** to run the first scan now.
+
+To scan more neighborhoods, add their names to `zones` in `eat/scan-config.json` (the names are the keys of `ZONES` in `eat/core.js`, like `eastvillage` or `ues`).
+
+**Cost guard**: one neighborhood scan is about 60–150 Text Search requests (billed as Text Search Enterprise: 1,000 free a month, then about $35 per 1,000). The scan stops each neighborhood at 150 requests and skips scans once the month reaches `monthlyLimit` (900 by default), so a weekly scan of two neighborhoods stays inside the free amount. Setting a $1 budget alert in Google Cloud Billing is still a good idea.
+
+**Your own key (optional)**: Settings → "Your own key" lets one device scan Near me or other neighborhoods directly. That key lives only in that browser; Safari and the Home Screen app keep separate copies.
 
 ## Install on iPhone
 Open the page in Safari → Share → **Add to Home Screen**. It runs full screen like an app.
