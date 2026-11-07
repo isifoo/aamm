@@ -1,0 +1,37 @@
+# Weekly Google Maps scan for eat. (eat/scan.mjs). The Places API key lives in the
+# EAT_GOOGLE_KEY repository secret; results are committed to eat/data/ for the page to read.
+name: eat weekly scan
+
+on:
+  schedule:
+    - cron: '23 9 * * 1' # Mondays 09:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: eat-scan
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Scan Google Maps
+        env:
+          EAT_GOOGLE_KEY: ${{ secrets.EAT_GOOGLE_KEY }}
+        run: node eat/scan.mjs
+      - name: Save results
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add eat/data
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "eat.: weekly Google Maps scan"
+          git push

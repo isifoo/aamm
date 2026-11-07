@@ -5,3 +5,5 @@
 !.gitignore
 !eat/
 !eat/**
+!.github/
+!.github/**

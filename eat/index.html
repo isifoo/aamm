@@ -185,6 +185,12 @@ svg{display:block}
 .btn.danger{color:var(--accent)}
 .btn:disabled{opacity:.5}
 .section{background:var(--card);border-radius:var(--r);padding:13px;box-shadow:var(--shadow);margin-bottom:10px}
+.empty code{font-size:13px;background:var(--soft);padding:1px 6px;border-radius:6px;color:var(--ink)}
+.banner code{font-size:12px;background:var(--soft);padding:1px 5px;border-radius:5px}
+details.section summary{list-style:none}
+details.section summary::-webkit-details-marker{display:none}
+details.section summary::after{content:' ›';color:var(--dim)}
+details.section[open] summary::after{content:' ⌄'}
 .section h4{margin:0 0 9px;font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim)}
 .stars{display:flex;gap:4px}
 .stars button{font-size:32px;line-height:1;color:var(--line);transition:transform .15s var(--ease),color .15s}
@@ -300,69 +306,13 @@ select.in{-webkit-appearance:none;appearance:none}
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
 <div class="toast" id="toast"></div>
 
-<script>
+<script type="module">
+import { box, ZONES, GENRES, PRICE, fromGoogle, searchText as gSearch, scanArea } from './core.js?v=5';
 (() => {
 'use strict';
 
 /* ---------------- config ---------------- */
 const LS = 'eat.v1';
-const box = (s, w, n, e) => ({ low:{latitude:s, longitude:w}, high:{latitude:n, longitude:e} });
-// Neighborhood boxes are approximate rectangles (south, west, north, east).
-const ZONES = {
-  williamsburg: { name:'Williamsburg',        boro:'Brooklyn',  b:box(40.6990,-73.9690,40.7230,-73.9330) },
-  greenpoint:   { name:'Greenpoint',          boro:'Brooklyn',  b:box(40.7205,-73.9620,40.7395,-73.9370) },
-  bushwick:     { name:'Bushwick',            boro:'Brooklyn',  b:box(40.6820,-73.9380,40.7110,-73.9050) },
-  dumbo:        { name:'DUMBO & Brooklyn Heights', boro:'Brooklyn', b:box(40.6900,-73.9990,40.7060,-73.9800) },
-  fortgreene:   { name:'Fort Greene & Clinton Hill', boro:'Brooklyn', b:box(40.6820,-73.9790,40.6990,-73.9560) },
-  parkslope:    { name:'Park Slope',          boro:'Brooklyn',  b:box(40.6600,-73.9900,40.6850,-73.9690) },
-  midtown:      { name:'Midtown',             boro:'Manhattan', b:box(40.7460,-73.9960,40.7650,-73.9680) },
-  chelsea:      { name:'Chelsea & Flatiron',  boro:'Manhattan', b:box(40.7380,-74.0080,40.7480,-73.9850) },
-  eastvillage:  { name:'East Village',        boro:'Manhattan', b:box(40.7210,-73.9920,40.7330,-73.9750) },
-  westvillage:  { name:'West Village',        boro:'Manhattan', b:box(40.7290,-74.0110,40.7400,-73.9990) },
-  les:          { name:'Lower East Side',     boro:'Manhattan', b:box(40.7120,-73.9940,40.7240,-73.9780) },
-  soho:         { name:'SoHo & Nolita',       boro:'Manhattan', b:box(40.7180,-74.0050,40.7280,-73.9930) },
-  fidi:         { name:'FiDi & Tribeca',      boro:'Manhattan', b:box(40.7010,-74.0160,40.7210,-74.0030) },
-  ues:          { name:'Upper East Side',     boro:'Manhattan', b:box(40.7640,-73.9700,40.7880,-73.9450) },
-  uws:          { name:'Upper West Side',     boro:'Manhattan', b:box(40.7700,-73.9890,40.8010,-73.9640) },
-  harlem:       { name:'Harlem',              boro:'Manhattan', b:box(40.8000,-73.9550,40.8250,-73.9350) },
-  astoria:      { name:'Astoria',             boro:'Queens',    b:box(40.7550,-73.9350,40.7780,-73.9050) },
-  lic:          { name:'Long Island City',    boro:'Queens',    b:box(40.7380,-73.9600,40.7550,-73.9350) },
-};
-const QUERIES = ['restaurants','pizza','italian restaurant','sushi','ramen','japanese restaurant','mexican restaurant','tacos',
-  'thai restaurant','chinese restaurant','korean restaurant','indian restaurant','vietnamese restaurant','mediterranean restaurant',
-  'middle eastern restaurant','greek restaurant','french restaurant','spanish tapas','latin american restaurant','american restaurant',
-  'new american restaurant','burgers','steakhouse','bbq','seafood','oysters','brunch','breakfast','diner','bakery','cafe',
-  'bagels deli','sandwiches','vegan restaurant','dessert','wine bar','cocktail bar with food','caribbean restaurant','african restaurant'];
-const FIELDS = ['id','displayName','formattedAddress','rating','userRatingCount','primaryType','types','priceLevel',
-  'googleMapsUri','location','businessStatus','currentOpeningHours.openNow'].map(f => 'places.' + f).join(',') + ',nextPageToken';
-const FOOD_TYPES = /restaurant|food|cafe|coffee|bakery|bar|pub|diner|deli|meal|bagel|dessert|ice_cream|pizza|sandwich|steak|brunch|breakfast|tea_house|juice|confectionery/;
-
-const GENRES = {
-  pizza:['Pizza','🍕'], sushi:['Sushi','🍣'], ramen:['Ramen','🍜'], japanese:['Japanese','🍱'], italian:['Italian','🍝'],
-  mexican:['Mexican','🌮'], thai:['Thai','🌶️'], chinese:['Chinese','🥟'], korean:['Korean','🍲'], indian:['Indian','🍛'],
-  vietnamese:['Vietnamese','🥢'], asian:['Asian','🥡'], mediterranean:['Mediterranean','🫒'], middle_eastern:['Middle Eastern','🧆'],
-  greek:['Greek','🥙'], french:['French','🥐'], spanish:['Spanish','🥘'], latin:['Latin','🫓'], caribbean:['Caribbean','🌴'],
-  african:['African','🍲'], seafood:['Seafood','🦪'], steak:['Steakhouse','🥩'], bbq:['BBQ','🍖'], burgers:['Burgers','🍔'],
-  american:['American','🍗'], brunch:['Brunch','🥞'], diner:['Diner','🍳'], vegan:['Vegan','🥗'], sandwich:['Sandwiches','🥪'],
-  deli:['Bagels & Deli','🥯'], bakery:['Bakery','🥖'], cafe:['Café','☕'], dessert:['Dessert','🍦'], bar:['Bars','🍸'],
-  wine:['Wine Bar','🍷'], fast:['Fast Food','🍟'], other:['Other','🍽️']
-};
-const TYPE_MAP = [
-  [/pizza/,'pizza'],[/sushi/,'sushi'],[/ramen/,'ramen'],[/japanese|izakaya|yakitori|tonkatsu/,'japanese'],[/italian|pasta/,'italian'],
-  [/mexican|taco|burrito|tex_mex/,'mexican'],[/thai/,'thai'],[/chinese|dim_sum|dumpling|sichuan|szechuan|cantonese|taiwanese|hot_pot|noodle/,'chinese'],
-  [/korean/,'korean'],[/indian|pakistani|nepal|bangladeshi|sri_lankan|himalayan/,'indian'],[/vietnamese|pho/,'vietnamese'],
-  [/asian|filipino|indonesian|malaysian|burmese|fusion/,'asian'],[/mediterranean/,'mediterranean'],
-  [/middle_eastern|lebanese|turkish|israeli|falafel|persian|afghan|kebab|shawarma|moroccan/,'middle_eastern'],[/greek/,'greek'],
-  [/french|bistro|creperie/,'french'],[/spanish|tapas|basque/,'spanish'],
-  [/latin|peruvian|brazilian|argentin|colombian|cuban|salvadoran|venezuelan|south_american|puerto_rican|dominican|arepa/,'latin'],
-  [/caribbean|jamaican|haitian/,'caribbean'],[/african|ethiopian|nigerian|senegalese/,'african'],
-  [/seafood|oyster|fish/,'seafood'],[/steak/,'steak'],[/barbecue|bbq/,'bbq'],[/hamburger|burger/,'burgers'],
-  [/brunch|breakfast/,'brunch'],[/diner/,'diner'],[/vegan|vegetarian|salad/,'vegan'],[/bagel|deli/,'deli'],[/sandwich/,'sandwich'],
-  [/bakery|pastry|patisserie/,'bakery'],[/cafe|coffee|tea_house|juice/,'cafe'],[/dessert|ice_cream|confection|donut|chocolate|candy/,'dessert'],
-  [/wine_bar/,'wine'],[/bar|pub|cocktail|lounge|beer|brewery|gastropub/,'bar'],[/fast_food|chicken|hot_dog/,'fast'],[/american|new_american|soul_food|southern/,'american']
-];
-const PRICE = {PRICE_LEVEL_FREE:'Free',PRICE_LEVEL_INEXPENSIVE:'$',PRICE_LEVEL_MODERATE:'$$',PRICE_LEVEL_EXPENSIVE:'$$$',PRICE_LEVEL_VERY_EXPENSIVE:'$$$$'};
-
 // Starter list for Williamsburg, shown before the first Google Maps scan. Ratings are approximate;
 // positions come from OpenStreetMap address lookups.
 const SEED = [
@@ -394,7 +344,7 @@ const SEED = [
 ];
 
 /* ---------------- state ---------------- */
-const defaults = () => ({ key:'', autoDays:7, useMine:true, showHidden:false, minRating:4.0, genre:'', view:'all', sort:'rating',
+const defaults = () => ({ key:'', autoDays:30, useMine:true, showHidden:false, minRating:4.0, genre:'', view:'all', sort:'rating',
   zone:'williamsburg', near:null, layout:'list', slotOpen:false, skipGenres:[], dismissIntro:false });
 let D;
 try { D = JSON.parse(localStorage.getItem(LS)) || null; } catch { D = null; }
@@ -437,11 +387,6 @@ const zoneInfo = k => k === 'near' ? { name:'Near me', boro:'', b: D.s.near && D
 function Z(k = D.s.zone){ return D.zones[k] || (D.zones[k] = { places:{}, lastSync:0 }); }
 const P = () => Z().places;
 
-function genreFromTypes(primary, types){
-  const list = [primary, ...(types||[])].filter(Boolean);
-  for (const t of list) for (const [re, g] of TYPE_MAP) if (re.test(t)) return g;
-  return 'other';
-}
 const genreOf = p => me(p.id).genre || p.genre || 'other';
 const genreInfo = g => GENRES[g] || [String(g).replace(/(^|_)\w/g, m => m.replace('_',' ').toUpperCase()), '🍽️'];
 function score(p){ const mr = me(p.id).rating; if (D.s.useMine && mr) return mr; return p.rating ?? mr ?? null; }
@@ -536,7 +481,7 @@ function tile(p){
 function emptyHtml(){
   if (!Object.keys(P()).length) {
     const z = zoneInfo(D.s.zone);
-    return `<div class="empty"><b>🗺️</b>No places in ${esc(z.name)} yet.<br>${D.s.key ? 'Scan it to load every restaurant from Google Maps.' : 'Add a Google Maps key in settings to scan it.'}
+    return `<div class="empty"><b>🗺️</b>No places in ${esc(z.name)} yet.<br>${D.s.key ? 'Scan it with your own key to load every restaurant from Google Maps.' : `It isn't in the weekly scan. Add <code>${esc(D.s.zone)}</code> to eat/scan-config.json on GitHub.`}
       <div><button class="mini" data-act="${D.s.key ? 'scan' : 'settings'}">${D.s.key ? 'Scan ' + esc(z.name) : 'Open settings'}</button></div></div>`;
   }
   const any = q || D.s.genre || +D.s.minRating > 0 || D.s.view !== 'all';
@@ -559,14 +504,12 @@ function renderList(){
 function renderSync(){
   $('#syncBtn').classList.toggle('busy', syncing);
   const z = Z();
-  $('#syncTxt').textContent = syncing ? 'Scanning…' : z.lastSync ? ago(z.lastSync) : D.s.key ? 'Scan' : 'Starter list';
+  $('#syncTxt').textContent = syncing ? 'Scanning…' : z.lastSync ? (sharedZone(D.s.zone) ? 'weekly scan · ' : '') + ago(z.lastSync) : D.s.key ? 'Scan' : Object.values(P()).some(p => p.source === 'starter') ? 'Starter list' : 'not scanned';
 }
 function renderBanner(){
   if (syncing) return;
   const b = $('#banner');
-  if (!D.s.key && !D.s.dismissIntro) {
-    b.innerHTML = `<div class="banner"><div><b>Connect Google Maps</b>Add a Google Maps key in settings to load every restaurant in the neighborhood and keep ratings fresh.<div><button class="mini" data-act="settings">Set it up</button></div></div><button class="x" data-act="dismiss" aria-label="Dismiss">×</button></div>`;
-  } else if (!b.querySelector('.err')) b.innerHTML = '';
+  if (!b.querySelector('.err')) b.innerHTML = '';
 }
 function renderAll(){ renderTop(); renderPresets(); renderChips(); renderList(); renderSync(); renderBanner(); buildReel(); }
 
@@ -814,14 +757,15 @@ function openAdd(){
 
 function zoneRow(k){
   const z = zoneInfo(k), d = D.zones[k], n = d ? Object.keys(d.places).length : 0;
-  return `<button class="zitem ${D.s.zone===k?'on':''}" data-z="${k}"><span>${esc(z.name)}</span><small>${d && d.lastSync ? `${n} places · ${ago(d.lastSync)}` : n ? `${n} places` : 'not scanned'}</small></button>`;
+  const weekly = sharedZone(k);
+  return `<button class="zitem ${D.s.zone===k?'on':''}" data-z="${k}"><span>${esc(z.name)}</span><small>${weekly ? `✓ weekly · ${weekly.count} places` : d && d.lastSync ? `${n} places · ${ago(d.lastSync)}` : n ? `${n} places` : 'not scanned'}</small></button>`;
 }
 function openZones(){
   const groups = {};
   Object.entries(ZONES).forEach(([k, z]) => (groups[z.boro] = groups[z.boro] || []).push(k));
   openSheet(`
     <h2>Neighborhood</h2>
-    <div class="sub">Each neighborhood keeps its own list. Your ratings follow you everywhere. A neighborhood's first scan uses about 100 Google searches.</div>
+    <div class="sub">Neighborhoods marked ✓ weekly are scanned by GitHub every week. Your ratings follow you everywhere.</div>
     <div class="zlist" id="zlist">
       <button class="zitem ${D.s.zone==='near'?'on':''}" data-z="near"><span>📍 Near me</span><small>${D.s.near ? 'about 1 km around you' : 'uses your location'}</small></button>
       ${Object.entries(groups).map(([boro, ks]) => `<h5>${boro}</h5>` + ks.map(zoneRow).join('')).join('')}
@@ -850,7 +794,7 @@ function switchZone(k){
   $('#banner').innerHTML = '';
   closeSheet();
   window.scrollTo({ top:0 });
-  if (D.s.key && !Z().lastSync && !Object.keys(P()).length) runSync(true);
+  pullShared(k).then(got => { if (!got && D.s.key && !Z().lastSync && !Object.keys(P()).length) runSync(true); });
 }
 
 function openSettings(){
@@ -869,15 +813,21 @@ function openSettings(){
       <div class="pills skip" id="sSkip" style="margin:0">${Object.entries(GENRES).map(([k,[l,e]]) => `<button data-g="${k}" class="${skip.has(k)?'on':''}">${e} ${l}</button>`).join('')}</div>
     </div>
     <div class="section">
-      <h4>Google Maps</h4>
+      <h4>Weekly scan</h4>
+      ${shared && Object.keys(shared.zones || {}).length
+        ? `<div class="hint" style="margin:0">GitHub scans these every week with your key kept in a secret, so this phone never needs it: ${Object.entries(shared.zones).map(([k, v]) => `<b>${esc(zoneInfo(k).name)}</b> (${ago(Date.parse(v.scanned))})`).join(', ')}.${shared.usage ? ` Google searches this month: ${shared.usage[new Date().toISOString().slice(0,7)] || 0} of ${shared.monthlyLimit || 900} allowed.` : ''}</div>`
+        : '<div class="hint" style="margin:0">Not set up yet. Add your Google key as the <b>EAT_GOOGLE_KEY</b> secret in the GitHub repo, then run the "eat weekly scan" action.</div>'}
+    </div>
+    <details class="section">
+      <summary style="font-weight:700;cursor:pointer">Your own key (optional)</summary>
+      <div class="hint" style="margin:10px 0 12px">Only for <b>Near me</b> and neighborhoods outside the weekly scan. It stays on this device, and each scan uses about 100 Google searches.</div>
       <label class="f" for="sKey">Places API key</label>
       <input class="in" id="sKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…" value="${esc(s.key)}">
-      <div class="hint">Stays on this device. In Google Cloud, enable <b>Places API (New)</b> and make a key restricted to this site. A full scan of one neighborhood is about 100 searches; weekly refreshes stay inside Google's monthly free amount.</div>
       <label class="f">Auto refresh</label>
-      <div class="pills" id="sAuto">${[[0,'Off'],[1,'Daily'],[3,'Every 3 days'],[7,'Weekly'],[30,'Monthly']].map(([d,l]) => `<button data-d="${d}" class="${+s.autoDays===d?'on':''}">${l}</button>`).join('')}</div>
+      <div class="pills" id="sAuto">${[[0,'Off'],[7,'Weekly'],[30,'Monthly']].map(([d,l]) => `<button data-d="${d}" class="${+s.autoDays===d?'on':''}">${l}</button>`).join('')}</div>
       <button class="btn primary" id="sScan" style="width:100%" ${syncing?'disabled':''}>${syncing?'Scanning…':'Scan ' + esc(z.name) + ' now'}</button>
       <div class="hint" style="margin:10px 0 0">${Z().lastSync ? 'Last scan ' + ago(Z().lastSync) + '.' : 'Not scanned yet.'}</div>
-    </div>
+    </details>
     <div class="section">
       <div class="switchrow"><span>Filter by my rating<small>When you've rated a place, your stars count instead of Google's.</small></span><button class="sw ${s.useMine?'on':''}" data-sw="useMine" aria-label="Filter by my rating"></button></div>
       <div class="switchrow" style="margin-top:10px"><span>Show hidden places</span><button class="sw ${s.showHidden?'on':''}" data-sw="showHidden" aria-label="Show hidden places"></button></div>
@@ -926,18 +876,8 @@ function openSettings(){
 
 /* ---------------- Google Places sync ---------------- */
 async function searchText(textQuery, bounds, pageToken, restrict = true){
-  const body = { textQuery, pageSize:20 };
-  if (bounds) body[restrict ? 'locationRestriction' : 'locationBias'] = { rectangle: bounds };
-  if (pageToken) body.pageToken = pageToken;
-  let res;
-  try {
-    res = await fetch('https://places.googleapis.com/v1/places:searchText', {
-      method:'POST', headers:{ 'Content-Type':'application/json', 'X-Goog-Api-Key':D.s.key, 'X-Goog-FieldMask':FIELDS }, body:JSON.stringify(body)
-    });
-  } catch { throw new Error('No connection to Google Maps'); }
-  const j = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(explainGoogleError(j.error, res.status));
-  return j;
+  try { return await gSearch(D.s.key, textQuery, bounds, pageToken, { restrict }); }
+  catch (e) { throw new Error(e.google || e.status ? explainGoogleError(e.google, e.status) : e.message); }
 }
 function explainGoogleError(err, status){
   const msg = err?.message || `Google Maps error ${status}`;
@@ -951,69 +891,85 @@ function explainGoogleError(err, status){
     /API_KEY_INVALID|key not valid/i.test(t) ? 'Fix: the key looks wrong. Copy it again from Google Cloud → Credentials.' : '';
   return tip ? `${msg} ${tip}` : msg;
 }
-function fromGoogle(g){
-  if (!g || !g.id || g.businessStatus === 'CLOSED_PERMANENTLY') return null;
-  const types = g.types || [];
-  if (!FOOD_TYPES.test([g.primaryType, ...types].join(' '))) return null;
-  return {
-    id:g.id, name:g.displayName?.text || 'Unnamed', address:g.formattedAddress || '',
-    rating:g.rating ?? null, userRatingCount:g.userRatingCount || 0, priceLevel:g.priceLevel, primaryType:g.primaryType,
-    genre:genreFromTypes(g.primaryType, types), googleMapsUri:g.googleMapsUri,
-    location:g.location, openNow:g.currentOpeningHours?.openNow, source:'google', updated:Date.now()
-  };
-}
 function setProgress(name, label, frac, found){
   $('#banner').innerHTML = `<div class="banner"><div style="flex:1"><b>Scanning ${esc(name)}…</b>${esc(label)} · ${found} places<div class="progress"><i style="width:${Math.round(frac*100)}%"></i></div></div></div>`;
 }
+// Fold a full scan of a neighborhood into its saved list.
+function mergeFound(zk, found, when){
+  const zd = Z(zk), ids = Object.keys(found);
+  // starter places: move your ratings onto the matching Google place; keep ones you touched that have no match
+  const byName = {}; ids.forEach(id => { byName[norm(found[id].name)] = id; });
+  Object.values(zd.places).filter(p => p.source === 'starter').forEach(p => {
+    const gid = byName[norm(p.name)], m = D.mine[p.id], used = m && (m.rating || m.fav || m.been || m.note || m.genre);
+    if (gid) { if (m) D.mine[gid] = Object.assign({}, m, D.mine[gid]); delete D.mine[p.id]; delete zd.places[p.id]; }
+    else if (used) p.source = 'mine';
+    else { delete D.mine[p.id]; delete zd.places[p.id]; }
+  });
+  ids.forEach(id => { zd.places[id] = Object.assign({}, zd.places[id], found[id]); delete zd.places[id].missed; });
+  // drop Google places missing from 3 scans in a row, unless you rated, saved or noted them
+  Object.values(zd.places).forEach(p => {
+    if (p.source !== 'google' || found[p.id]) return;
+    p.missed = (p.missed || 0) + 1;
+    const m = D.mine[p.id];
+    if (p.missed >= 3 && !(m && (m.rating || m.fav || m.note))) delete zd.places[p.id];
+  });
+  zd.lastSync = when;
+  if (zk === D.s.zone && D.s.genre && !Object.values(zd.places).some(p => genreOf(p) === D.s.genre)) D.s.genre = '';
+  save();
+}
+
+/* ---------------- weekly scan (GitHub) ---------------- */
+// GitHub runs scan.mjs every week with the key kept in a repository secret, and saves the results in data/.
+let shared = null; // contents of data/index.json, or null when there is none
+async function loadSharedIndex(){
+  try { const r = await fetch('data/index.json?t=' + Date.now(), { cache:'no-store' }); shared = r.ok ? await r.json() : null; }
+  catch { /* offline: keep what we had */ }
+  return shared;
+}
+const sharedZone = k => shared && shared.zones && shared.zones[k];
+async function pullShared(k = D.s.zone, { refreshIndex = true, quiet = true } = {}){
+  if (refreshIndex || !shared) await loadSharedIndex();
+  const info = sharedZone(k), zd = Z(k);
+  if (!info) return false;
+  const when = Date.parse(info.scanned) || 0;
+  if (when <= (zd.sharedAt || 0)) { if (!quiet) toast('Already up to date'); return false; }
+  try {
+    const r = await fetch(`data/${k}.json?t=${when}`); if (!r.ok) return false;
+    const j = await r.json(), found = {};
+    (j.places || []).forEach(p => { found[p.id] = p; });
+    if (!Object.keys(found).length) return false;
+    mergeFound(k, found, when); zd.sharedAt = when; save();
+    if (k === D.s.zone) { shown = 60; renderAll(); if (!quiet) toast(`${Object.keys(found).length} places from this week's scan`); }
+    return true;
+  } catch { return false; }
+}
+
 async function runSync(manual){
   if (syncing || !D.s.key) return;
-  const zk = D.s.zone, zi = zoneInfo(zk), zd = Z(zk);
+  const zk = D.s.zone, zi = zoneInfo(zk);
   if (!zi.b) { toast('Pick a neighborhood first'); return; }
   syncing = true; renderSync();
-  const found = {};
   try {
-    for (let i = 0; i < QUERIES.length; i++) {
-      let token = null, page = 0;
-      do {
-        setProgress(zi.name, QUERIES[i], i / QUERIES.length, Object.keys(found).length);
-        const r = await searchText(QUERIES[i], zi.b, token);
-        (r.places || []).forEach(g => { const p = fromGoogle(g); if (p) found[p.id] = p; });
-        token = r.nextPageToken; page++;
-      } while (token && page < 3);
-    }
-    const ids = Object.keys(found);
-    if (!ids.length) throw new Error('Google returned no places for this area.');
-    // starter places: move your ratings onto the matching Google place; keep ones you touched that have no match
-    const byName = {}; ids.forEach(id => { byName[norm(found[id].name)] = id; });
-    Object.values(zd.places).filter(p => p.source === 'starter').forEach(p => {
-      const gid = byName[norm(p.name)], m = D.mine[p.id], used = m && (m.rating || m.fav || m.been || m.note || m.genre);
-      if (gid) { if (m) D.mine[gid] = Object.assign({}, m, D.mine[gid]); delete D.mine[p.id]; delete zd.places[p.id]; }
-      else if (used) p.source = 'mine';
-      else { delete D.mine[p.id]; delete zd.places[p.id]; }
-    });
-    ids.forEach(id => { zd.places[id] = Object.assign({}, zd.places[id], found[id]); delete zd.places[id].missed; });
-    // drop Google places missing from 3 scans in a row, unless you rated, saved or noted them
-    Object.values(zd.places).forEach(p => {
-      if (p.source !== 'google' || found[p.id]) return;
-      p.missed = (p.missed || 0) + 1;
-      const m = D.mine[p.id];
-      if (p.missed >= 3 && !(m && (m.rating || m.fav || m.note))) delete zd.places[p.id];
-    });
-    zd.lastSync = Date.now();
-    if (D.s.genre && !Object.values(zd.places).some(p => genreOf(p) === D.s.genre)) D.s.genre = '';
-    save();
-    toast(`${ids.length} ${zi.name} spots loaded`);
+    const { found } = await scanArea(D.s.key, zi.b, { maxCalls:150, onProgress:(label, frac, n) => setProgress(zi.name, label, frac, n) });
+    const n = Object.keys(found).length;
+    if (!n) throw new Error('Google returned no places for this area.');
+    mergeFound(zk, found, Date.now());
+    toast(`${n} ${zi.name} spots loaded`);
   } catch (err) {
     syncing = false;
-    $('#banner').innerHTML = `<div class="banner err"><div><b>Scan stopped</b>${esc(err.message)}</div><button class="x" data-act="clearbanner" aria-label="Dismiss">×</button></div>`;
+    const msg = err.google || err.status ? explainGoogleError(err.google, err.status) : err.message;
+    $('#banner').innerHTML = `<div class="banner err"><div><b>Scan stopped</b>${esc(msg)}</div><button class="x" data-act="clearbanner" aria-label="Dismiss">×</button></div>`;
     renderSync();
     if (manual) toast('Scan failed');
     return;
   }
   syncing = false; $('#banner').innerHTML = ''; shown = 60; renderAll();
 }
-function maybeAutoSync(){
+async function maybeAutoSync(){
+  await pullShared();
+  renderSync(); renderBanner();
   const z = Z();
+  if (sharedZone(D.s.zone)) return; // GitHub keeps this one fresh
   if (!D.s.key || !D.s.autoDays || syncing || !z.lastSync) return; // a neighborhood's first scan is always your choice
   if (Date.now() - z.lastSync > D.s.autoDays * 864e5) runSync(false);
 }
@@ -1042,9 +998,14 @@ $('#banner').onclick = e => { const a = e.target.closest('[data-act]'); if (a) o
 $('#spinBtn').onclick = spin;
 $('#pickBtn').onclick = pickOne;
 $('#addBtn').onclick = openAdd;
-$('#openSettings').onclick = openSettings;
+$('#openSettings').onclick = async () => { await loadSharedIndex(); openSettings(); };
 $('#zoneBtn').onclick = openZones;
-$('#syncBtn').onclick = () => D.s.key ? runSync(true) : openSettings();
+$('#syncBtn').onclick = async () => {
+  if (syncing) return;
+  await loadSharedIndex();
+  if (sharedZone(D.s.zone)) { pullShared(D.s.zone, { refreshIndex:false, quiet:false }); return; }
+  D.s.key ? runSync(true) : openSettings();
+};
 $('#scrim').onclick = closeSheet;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#sheet').classList.contains('on')) closeSheet(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderSync(); maybeAutoSync(); } });
