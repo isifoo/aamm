@@ -388,7 +388,7 @@ dialog.dlg::backdrop{background:transparent}
 <div id="toast" class="hidden"></div>
 
 <script>
-const APP_VERSION='v25';
+const APP_VERSION='v26';
 const FB_CFG={
   apiKey:"AIzaSyAtG1gnSkQ3rMA3umOg1BtEX_tvkcubjso",
   authDomain:"aamm-ab017.firebaseapp.com",
@@ -931,7 +931,7 @@ function dupOf(o){return {...JSON.parse(JSON.stringify(o)),id:uid(),name:o.name+
 
 /* ======================= PROJECT POPUP ======================= */
 let curId=null, saveT=null, curTab='overview', openedAt=0;
-const TABS=[['overview','Overview'],['roadmap','Roadmap'],['tasks','Tasks'],['updates','Updates'],['links','Links'],['details','Details']];
+const TABS=[['overview','Overview'],['roadmap','Roadmap'],['tasks','Tasks'],['updates','Updates'],['log','Chat log'],['links','Links'],['details','Details']];
 const sopt=(arr,val,fn)=>arr.map((x,i)=>`<option value="${fn?fn(x,i):x}" ${String(fn?fn(x,i):x)===String(val)?'selected':''}>${esc(typeof x==='object'?x.label:x)||'—'}</option>`).join('');
 const fld=(label,f,val,attrs='')=>`<label class="f"><span>${label}</span><input data-f="${f}" value="${esc(val)}" ${attrs}></label>`;
 
@@ -970,6 +970,12 @@ function pUpdates(p){
   const ups=[...(p.updates||[])].map((u,i)=>({u,i})).reverse();
   return `<div class="upost"><textarea id="upNew" placeholder="Write an update, decision or note... (Ctrl+Enter to post)"></textarea><button class="btn primary" data-a="up-post" style="margin:6px 0 10px">Post update</button></div>
   ${ups.length?ups.map(({u,i})=>`<div class="upd ${u.auto?'auto':''}">${u.auto?'':`<button class="ux" data-a="up-del" data-i="${i}">✕</button>`}${esc(u.text).replace(/\n/g,'<br>')}<small>${ago(u.ts)}</small></div>`).join(''):'<div style="color:var(--dim)">No updates yet. Status and priority changes are logged here automatically.</div>'}`;}
+function pLog(p){
+  const bs=[...(p.briefs||[])].map((b,i)=>({b,i})).reverse();
+  if(!bs.length)return '<div style="color:var(--dim)">Nothing yet. Type <b>ccmm</b> in a Claude Code chat on your PC: it saves a short summary of that chat here, with the version and any important facts that have no field of their own.</div>';
+  return bs.map(({b,i})=>`<div class="upd"><button class="ux" data-a="br-del" data-i="${i}" title="Delete this entry">✕</button><b>${esc(b.title||'Chat')}</b>${b.version?` <span class="bdg" style="--c:#579bfc">${esc(b.version)}</span>`:''}
+    <textarea class="rowin" data-l="briefs" data-i="${i}" data-k="summary" rows="5" style="width:100%;margin-top:6px">${esc(b.summary||'')}</textarea>
+    ${(b.facts&&b.facts.length)?`<div style="margin-top:6px">${b.facts.map(f=>`<div><span style="color:var(--dim)">${esc(f.k)}:</span> ${esc(f.v)}</div>`).join('')}</div>`:''}<small>${ago(b.ts)}</small></div>`).join('');}
 function pLinks(p){
   const lk=p.links||[];
   return `${fld('Project link (live app / main URL)','url',p.url,'placeholder="https://..."')}
@@ -991,7 +997,7 @@ function pDetails(p){return `
   ${fld('Blocked reason','blockedReason',p.blockedReason)}
   <label class="f"><span>Notes / known issues / ideas</span><textarea data-f="notes">${esc(p.notes||'')}</textarea></label>
   <div style="font-size:12px;color:var(--dim)">Created ${p.created?new Date(p.created).toLocaleDateString():'?'} · last edited ${ago(p.updated)}</div>`;}
-const PANELS={overview:pOverview,roadmap:pRoadmap,tasks:pTasks,updates:pUpdates,links:pLinks,details:pDetails};
+const PANELS={overview:pOverview,roadmap:pRoadmap,tasks:pTasks,updates:pUpdates,log:pLog,links:pLinks,details:pDetails};
 
 function headHTML(p){
   const s=ST[p.status]||ST.idea, pr=PRI[p.priority||0];
@@ -1123,6 +1129,7 @@ $('dlgIn').addEventListener('click',e=>{
     case 'rm-mv':{const r=p.roadmap[i],ids=LANES.map(l=>l.id),j=ids.indexOf(r.lane)+(+b.dataset.d);if(j>=0&&j<ids.length){r.lane=ids[j];queueSave();repaint('roadmap');}break;}
     case 'up-post':postUpdate();break;
     case 'up-del':p.updates.splice(i,1);queueSave();repaint('updates');break;
+    case 'br-del':p.briefs.splice(i,1);queueSave();repaint('log');break;
     case 'lk-add':(p.links=p.links||[]).push({label:'',url:''});queueSave();repaint('links');break;
     case 'lk-del':p.links.splice(i,1);queueSave();repaint('links');break;
     case 'open-folder':openFolder(p.folder);break;
