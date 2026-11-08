@@ -43,3 +43,18 @@ To scan more neighborhoods, add their names to `zones` in `eat/scan-config.json`
 
 ## Install on iPhone
 Open the page in Safari → Share → **Add to Home Screen**. It runs full screen like an app.
+
+---
+
+# NYC Ferry Sim
+
+A live map of the boats on New York Harbor. It lives in `ferry/` and is served at `/ferry/` on the same GitHub Pages site.
+
+- **Two layers**, switched on and off at the top of the panel:
+  - **NYC Ferry**: all six routes (East River, Astoria, South Brooklyn, Rockaway, Soundview, St. George) with every landing.
+  - **Other ferries**: the alternatives in the harbor: Staten Island Ferry, Governors Island ferry, NY Waterway (Hoboken, Port Imperial, Paulus Hook) and Seastreak.
+- **Simulation**: boats leave each end of a route on a typical headway (more often at rush hour), cruise at an average speed and stop at every landing. It starts at the real time in New York; play, pause, scrub the day, or run it at live, 10×, 60× or 300× speed.
+- **Tap a boat** for its route, direction, next stop and arrival time. **Tap a landing** for its next departures.
+- Tap a route in the list to hide it; double-tap to zoom to it. Light and dark maps.
+
+The schedule is an approximation built from typical headways and speeds, not live GPS. Routes, landings and headways are at the top of the script in `ferry/index.html`.
