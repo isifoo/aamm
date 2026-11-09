@@ -5,5 +5,7 @@
 !.gitignore
 !eat/
 !eat/**
+!ferry/
+!ferry/**
 !.github/
 !.github/**

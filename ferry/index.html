@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NYC Ferry Sim</title>
+<meta name="description" content="A live simulation of every NYC Ferry route, with a second layer for the other ferries in the harbor.">
+<meta name="theme-color" content="#f4f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1418" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ferry">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b6e99'/%3E%3Cpath d='M12 38h40l-6 10H18z' fill='%23fff'/%3E%3Cpath d='M22 38V26h18l6 12' fill='none' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#f4f7f9; --card:#ffffff; --soft:#eaf0f3; --ink:#12212b; --dim:#62737f; --line:#dbe4ea;
+  --accent:#0b6e99; --on-accent:#fff;
+  --shadow:0 1px 2px rgba(15,35,50,.06),0 6px 22px rgba(15,35,50,.10);
+  --r:16px; --ease:cubic-bezier(.23,1,.32,1);
+  --font:"DM Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1418; --card:#172128; --soft:#1f2b33; --ink:#e8f0f4; --dim:#93a4af; --line:#26343d;
+    --accent:#4cb3e0; --on-accent:#08131a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1418; --card:#172128; --soft:#1f2b33; --ink:#e8f0f4; --dim:#93a4af; --line:#26343d;
+  --accent:#4cb3e0; --on-accent:#08131a;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 var(--font);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+#map{position:fixed;inset:0;background:var(--bg)}
+.leaflet-container{font:inherit;background:var(--bg)}
+.leaflet-control-attribution{font:10px var(--font)!important;background:color-mix(in srgb,var(--card) 80%,transparent)!important;color:var(--dim)!important}
+.leaflet-control-attribution a{color:var(--dim)!important}
+.leaflet-control-zoom{display:none}
+.tiles-light{filter:saturate(.55) brightness(1.03)}
+.tiles-dark{filter:invert(1) hue-rotate(185deg) brightness(.92) contrast(.88) saturate(.5)}
+
+/* Top bar: clock + playback */
+.top{position:fixed;z-index:1000;top:calc(10px + var(--safe-t));left:12px;right:12px;display:flex;gap:8px;align-items:stretch;pointer-events:none}
+.top > *{pointer-events:auto}
+.brand{display:flex;align-items:center;gap:9px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:8px 12px 8px 9px}
+.brand .logo{width:30px;height:30px;border-radius:9px;background:var(--accent);display:grid;place-items:center;flex:none}
+.brand .logo svg{width:20px;height:20px}
+.brand b{font-size:15px;letter-spacing:-.01em;white-space:nowrap}
+.brand small{display:block;color:var(--dim);font-size:11.5px;font-weight:600;margin-top:-1px}
+.clock{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:6px 8px 6px 12px}
+.clock .time{font-variant-numeric:tabular-nums;font-weight:800;font-size:20px;letter-spacing:-.02em;min-width:76px}
+.clock .time small{display:block;font-size:11px;color:var(--dim);font-weight:600;letter-spacing:0}
+.clock input[type=range]{flex:1;min-width:60px;accent-color:var(--accent)}
+.ibtn{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--soft);flex:none;transition:transform .15s var(--ease)}
+.ibtn:active{transform:scale(.93)}
+.ibtn.primary{background:var(--accent);color:var(--on-accent)}
+.ibtn svg{width:18px;height:18px}
+.speed{display:flex;background:var(--soft);border-radius:11px;padding:3px;flex:none}
+.speed button{padding:5px 8px;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--dim)}
+.speed button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* Panel: layers + routes */
+.panel{position:fixed;z-index:1000;left:12px;top:calc(72px + var(--safe-t));width:330px;max-height:calc(100% - 96px - var(--safe-t));overflow:auto;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;overscroll-behavior:contain}
+.panel h2{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:700}
+.layers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.layer{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:10px 11px;border-radius:13px;border:1.5px solid var(--line);background:var(--bg);transition:border-color .15s,background .15s}
+.layer b{font-size:14px}
+.layer span{font-size:12px;color:var(--dim);font-weight:600}
+.layer .chk{width:18px;height:18px;border-radius:6px;border:1.5px solid var(--line);display:grid;place-items:center;margin-bottom:4px}
+.layer.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--card))}
+.layer.on .chk{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.layer .chk svg{width:12px;height:12px;opacity:0}
+.layer.on .chk svg{opacity:1}
+.group{margin-bottom:12px}
+.group.off{display:none}
+.route{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:7px 6px;border-radius:10px}
+.route:hover{background:var(--soft)}
+.route .sw{width:26px;height:6px;border-radius:3px;flex:none}
+.route.muted{opacity:.4}
+.route .nm{flex:1;min-width:0}
+.route .nm b{display:block;font-size:14px;font-weight:700;line-height:1.2}
+.route .nm span{display:block;font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.route .ct{font-variant-numeric:tabular-nums;font-size:12.5px;font-weight:700;color:var(--dim);white-space:nowrap}
+.route .ct.live{color:var(--ink)}
+.note{font-size:11.5px;color:var(--dim);margin:6px 2px 0;line-height:1.45}
+.sheet-handle{display:none}
+.fab{position:fixed;z-index:1000;right:12px;bottom:calc(24px + var(--safe-b));display:flex;flex-direction:column;gap:8px}
+.fab .ibtn{width:42px;height:42px;background:var(--card);box-shadow:var(--shadow)}
+
+/* Boats and stops */
+.boat{width:22px;height:22px;display:grid;place-items:center}
+.boat svg{width:22px;height:22px;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.35));transition:none}
+.boat.sel svg{width:28px;height:28px}
+.stop{width:12px;height:12px;border-radius:50%;background:var(--card);border:2.5px solid var(--ink);box-shadow:0 0 0 2px var(--card)}
+.stop.alt{border-style:solid;border-color:var(--dim);width:10px;height:10px}
+.leaflet-popup-content-wrapper{background:var(--card);color:var(--ink);border-radius:14px;box-shadow:var(--shadow)}
+.leaflet-popup-tip{background:var(--card)}
+.leaflet-popup-content{margin:12px 14px;font:13.5px/1.4 var(--font);min-width:200px}
+.leaflet-container a.leaflet-popup-close-button{color:var(--dim)}
+.pop h3{margin:0 0 2px;font-size:15px}
+.pop .sub{color:var(--dim);font-size:12px;margin-bottom:8px}
+.pop .tag{display:inline-block;padding:1px 7px;border-radius:6px;color:#fff;font-size:11.5px;font-weight:700;margin-right:4px}
+.pop table{border-collapse:collapse;width:100%}
+.pop td{padding:3px 0;vertical-align:top;font-size:13px}
+.pop td.t{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap;padding-left:10px}
+.pop .bar{height:5px;background:var(--soft);border-radius:3px;margin:8px 0 2px;overflow:hidden}
+.pop .bar i{display:block;height:100%;border-radius:3px}
+
+@media (max-width:720px){
+  .top{flex-wrap:wrap}
+  .brand{display:none}
+  .clock{flex-wrap:wrap;padding:8px 10px;row-gap:6px}
+  .clock .time{flex:1}
+  .clock .speed{order:4}
+  .clock input[type=range]{order:5;flex:1}
+  .panel{left:0;right:0;top:auto;bottom:0;width:auto;max-height:52%;border-radius:20px 20px 0 0;padding:6px 16px calc(14px + var(--safe-b));transition:transform .3s var(--ease)}
+  .panel.min{transform:translateY(calc(100% - 132px - var(--safe-b)))}
+  .sheet-handle{display:block;width:100%;padding:6px 0 10px}
+  .sheet-handle i{display:block;width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto}
+  .fab{bottom:auto;top:calc(130px + var(--safe-t))}
+}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Map of New York Harbor ferry routes"></div>
+
+<div class="top">
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M3 15h18l-3 4H6z" fill="#fff"/><path d="M7 15V10h8l3 5"/><path d="M2 21c2 0 2-1 4-1s2 1 4 1 2-1 4-1 2 1 4 1 2-1 4-1"/></svg></div>
+    <div><b>NYC Ferry Sim</b><small>Every route, live</small></div>
+  </div>
+  <div class="clock">
+    <div class="time" id="time">--:--<small id="day">Simulated time</small></div>
+    <button class="ibtn primary" id="play" aria-label="Pause"></button>
+    <div class="speed" id="speed" role="group" aria-label="Simulation speed"></div>
+    <button class="ibtn" id="now" title="Jump to the real time in New York" aria-label="Jump to now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>
+    <input type="range" id="scrub" min="0" max="1439" step="1" aria-label="Time of day">
+  </div>
+</div>
+
+<aside class="panel" id="panel">
+  <button class="sheet-handle" id="handle" aria-label="Show or hide the route list"><i></i></button>
+  <h2>Layers</h2>
+  <div class="layers" id="layers"></div>
+  <div id="groups"></div>
+  <p class="note">Simulated from typical headways and cruising speeds, not live GPS. Times are approximate. Tap a boat or a landing for details.</p>
+</aside>
+
+<div class="fab">
+  <button class="ibtn" id="fit" title="Show all routes" aria-label="Show all routes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  <button class="ibtn" id="theme" title="Switch light or dark" aria-label="Switch light or dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg></button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+'use strict';
+/* ------------------------------------------------------------------
+   Landings. Coordinates are approximate pier locations.
+------------------------------------------------------------------- */
+const STOPS = {
+  pier11:  ['Wall St / Pier 11',          40.7033, -74.0058],
+  corl:    ['Corlears Hook',              40.7113, -73.9782],
+  dumbo:   ['Dumbo / Fulton Ferry',       40.7035, -73.9945],
+  swb:     ['South Williamsburg',         40.7098, -73.9697],
+  nwb:     ['North Williamsburg',         40.7217, -73.9622],
+  gpt:     ['Greenpoint',                 40.7313, -73.9619],
+  hps:     ['Hunters Point South',        40.7425, -73.9614],
+  e34:     ['East 34th St',               40.7443, -73.9714],
+  stuy:    ['Stuyvesant Cove',            40.7334, -73.9739],
+  lic:     ['Long Island City',           40.7467, -73.9592],
+  ri:      ['Roosevelt Island',           40.7577, -73.9533],
+  ast:     ['Astoria',                    40.7716, -73.9359],
+  e90:     ['East 90th St',               40.7774, -73.9439],
+  bny:     ['Brooklyn Navy Yard',         40.7050, -73.9745],
+  pier1:   ['Brooklyn Bridge Park Pier 1',40.7020, -73.9975],
+  pier6:   ['Brooklyn Bridge Park Pier 6',40.6935, -74.0030],
+  redhook: ['Red Hook / Atlantic Basin',  40.6853, -74.0098],
+  gi:      ['Governors Island',           40.6905, -74.0122],
+  bat:     ['Sunset Park / BAT',          40.6457, -74.0251],
+  bayridge:['Bay Ridge',                  40.6358, -74.0385],
+  rock:    ['Rockaway',                   40.5860, -73.8235],
+  sound:   ['Soundview',                  40.8063, -73.8530],
+  fpp:     ['Ferry Point Park',           40.8104, -73.8306],
+  mtw:     ['Midtown West / W 39th St',   40.7600, -74.0035],
+  bpc:     ['Battery Park City / Vesey St',40.7148,-74.0186],
+  stg:     ['St. George',                 40.6448, -74.0718],
+  // Other operators
+  whitehall:['Whitehall Terminal',        40.7010, -74.0130],
+  stgsi:   ['St. George Terminal',        40.6437, -74.0735],
+  bmb:     ['Battery Maritime Building',  40.7010, -74.0105],
+  soiss:   ['Governors Island (Soissons)',40.6925, -74.0145],
+  hob:     ['Hoboken Terminal',           40.7355, -74.0272],
+  bfp:     ['Brookfield Place',           40.7133, -74.0183],
+  pi:      ['Port Imperial',              40.7768, -74.0152],
+  ph:      ['Paulus Hook',                40.7143, -74.0330],
+  ah:      ['Atlantic Highlands',         40.4180, -74.0355],
+  e35:     ['East 35th St',               40.7450, -73.9715],
+};
+
+/* ------------------------------------------------------------------
+   Water waypoints shared by several routes, so lines stay off land.
+------------------------------------------------------------------- */
+const W = {
+  erBB:   [40.7058,-73.9985], erMB:[40.7082,-73.9895], erWall:[40.7092,-73.9768],
+  erWB:   [40.7140,-73.9712], erBend:[40.7225,-73.9670], er14:[40.7305,-73.9672],
+  er23:   [40.7385,-73.9685], erUN:[40.7500,-73.9645],
+  riW1:   [40.7565,-73.9585], riW2:[40.7650,-73.9515], riW3:[40.7730,-73.9462],
+  riE1:   [40.7525,-73.9575], riE2:[40.7640,-73.9445], riTip:[40.7765,-73.9400],
+  hg1:    [40.7785,-73.9396], hg2:[40.7806,-73.9319], hg3:[40.7837,-73.9241],
+  erN1:   [40.7870,-73.9190], erN2:[40.7909,-73.9121], erN3:[40.7948,-73.9018],
+  erN4:   [40.7993,-73.8907], erN5:[40.8010,-73.8780],
+  nyHarborN:[40.6985,-74.0110], upperBay1:[40.6800,-74.0300], upperBay2:[40.6600,-74.0370],
+  narrows:[40.6080,-74.0440], lowerBay1:[40.5800,-74.0300],
+  hud1:   [40.7050,-74.0190], hud2:[40.7300,-74.0170], hud3:[40.7480,-74.0110],
+};
+const P = (lat,lng)=>[lat,lng];
+
+/* ------------------------------------------------------------------
+   Routes. path: stop ids and waypoints in order.
+   hw: [[startMin, endMin, headwayMin], ...] departures from each end.
+   kn: average cruising speed (knots). dwell: minutes at each stop.
+------------------------------------------------------------------- */
+const DAY = [[390,600,20],[600,960,30],[960,1170,20],[1170,1320,30]];
+const NETWORKS = [
+  { id:'nycf', name:'NYC Ferry', blurb:'All 6 routes', routes:[
+    { id:'ER', name:'East River', color:'#00a3c7', kn:15, dwell:2, hw:DAY,
+      path:['pier11',W.erBB,'dumbo',W.erMB,W.erWall,'swb',W.erBend,'nwb',P(40.7265,-73.9637),'gpt',P(40.7370,-73.9640),'hps',W.er23,'e34'] },
+    { id:'AST', name:'Astoria', color:'#f28c28', kn:16, dwell:2, hw:[[390,600,25],[600,960,40],[960,1170,25],[1170,1305,45]],
+      path:['pier11',W.erBB,W.erMB,'bny',W.erWall,W.erWB,W.erBend,W.er14,W.er23,'e34','lic',W.riE1,'ri',W.riE2,'ast',W.riTip,'e90'] },
+    { id:'SB', name:'South Brooklyn', color:'#e2b200', kn:16, dwell:2, hw:[[390,1290,40]],
+      path:['corl',W.erWall,W.erMB,W.erBB,'pier11',P(40.7000,-74.0020),'pier1',P(40.6987,-74.0017),'pier6',P(40.6885,-74.0060),'redhook','gi',P(40.6800,-74.0230),W.upperBay2,'bat',P(40.6411,-74.0323),'bayridge'] },
+    { id:'RW', name:'Rockaway', color:'#3a7bd5', kn:22, dwell:3, hw:[[375,1260,50]],
+      path:['pier11',W.nyHarborN,W.upperBay1,W.upperBay2,'bat',P(40.6431,-74.0331),P(40.6314,-74.0438),W.narrows,W.lowerBay1,P(40.5650,-74.0050),P(40.5659,-73.9629),P(40.5666,-73.9286),P(40.5718,-73.9029),P(40.5743,-73.8857),P(40.5802,-73.8652),'rock'] },
+    { id:'SV', name:'Soundview', color:'#8e4bb4', kn:18, dwell:2, hw:[[390,600,35],[600,960,50],[960,1170,35],[1170,1290,55]],
+      path:['pier11',W.erBB,W.erMB,W.erWall,W.erWB,W.erBend,W.er14,'stuy',W.er23,'e34',W.erUN,W.riW1,W.riW2,W.riW3,'e90',W.hg1,W.hg2,W.hg3,W.erN1,W.erN2,W.erN3,W.erN4,W.erN5,P(40.8035,-73.8600),'sound',P(40.8060,-73.8420),'fpp'] },
+    { id:'SG', name:'St. George', color:'#2bb673', kn:20, dwell:3, hw:[[400,600,45],[600,960,60],[960,1170,45],[1170,1260,60]],
+      path:['mtw',W.hud3,W.hud2,P(40.7148,-74.0215),'bpc',W.hud1,P(40.6950,-74.0270),W.upperBay1,P(40.6600,-74.0560),'stg'] },
+  ]},
+  { id:'alt', name:'Other ferries', blurb:'SI Ferry, NY Waterway, more', routes:[
+    { id:'SIF', name:'Staten Island Ferry', color:'#ff6f1e', kn:16, dwell:0, hw:[[0,360,30],[360,570,15],[570,960,20],[960,1170,15],[1170,1440,30]],
+      path:['whitehall',P(40.6950,-74.0190),W.upperBay1,P(40.6600,-74.0560),'stgsi'] },
+    { id:'GIF', name:'Governors Island', color:'#7a9a01', kn:8, dwell:0, hw:[[420,1140,15]],
+      path:['bmb',P(40.6985,-74.0120),'soiss'] },
+    { id:'NYW1', name:'NY Waterway: Hoboken', color:'#1d4e89', kn:14, dwell:0, hw:[[360,600,10],[600,960,20],[960,1200,10],[1200,1380,30]],
+      path:['hob',P(40.7300,-74.0230),P(40.7200,-74.0200),'bfp'] },
+    { id:'NYW2', name:'NY Waterway: Port Imperial', color:'#4a77b4', kn:14, dwell:0, hw:[[360,600,10],[600,960,20],[960,1200,10],[1200,1380,30]],
+      path:['pi',P(40.7700,-74.0120),'mtw'] },
+    { id:'NYW3', name:'NY Waterway: Paulus Hook', color:'#6f9bd1', kn:14, dwell:0, hw:[[360,570,15],[570,960,30],[960,1170,15]],
+      path:['ph',P(40.7110,-74.0270),'bfp'] },
+    { id:'SS', name:'Seastreak', color:'#c43b5c', kn:28, dwell:3, hw:[[345,540,60],[960,1170,60]],
+      path:['ah',P(40.4400,-74.0350),P(40.4800,-74.0300),P(40.5200,-74.0280),W.lowerBay1,W.narrows,W.upperBay2,W.upperBay1,W.nyHarborN,'pier11',W.erBB,W.erMB,W.erWall,W.erWB,W.erBend,W.er14,W.er23,'e35'] },
+  ]},
+];
+
+/* ------------------------------------------------------------------
+   Geometry + timetable builder
+------------------------------------------------------------------- */
+const R = 6371000, rad = Math.PI/180;
+function dist(a,b){ const x=(b[1]-a[1])*rad*Math.cos((a[0]+b[0])/2*rad), y=(b[0]-a[0])*rad; return Math.hypot(x,y)*R; }
+function bearing(a,b){ const x=(b[1]-a[1])*Math.cos((a[0]+b[0])/2*rad), y=b[0]-a[0]; return Math.atan2(x,y)/rad; }
+const pt = s => typeof s === 'string' ? [STOPS[s][1],STOPS[s][2]] : s;
+
+function buildDirection(route, items){
+  const pts = items.map(pt);
+  const cum=[0]; for(let i=1;i<pts.length;i++) cum.push(cum[i-1]+dist(pts[i-1],pts[i]));
+  const stops = []; items.forEach((s,i)=>{ if(typeof s==='string') stops.push({id:s,d:cum[i]}); });
+  const mpm = route.kn*1852/60;                       // metres per minute
+  const legs = []; let t = 0;                        // timeline segments
+  const at = [];                                     // minutes after departure at each stop
+  stops.forEach((s,i)=>{
+    if(i>0){ const len=s.d-stops[i-1].d, dur=len/mpm+1.2; legs.push({t0:t,t1:t+dur,d0:stops[i-1].d,d1:s.d}); t+=dur; }
+    at.push({id:s.id,t});
+    if(i>0 && i<stops.length-1 && route.dwell){ legs.push({t0:t,t1:t+route.dwell,d0:s.d,d1:s.d,stop:s.id}); t+=route.dwell; }
+  });
+  return {pts,cum,stops,legs,at,dur:t,to:stops[stops.length-1].id,from:stops[0].id};
+}
+function departures(hw){
+  const out=[]; for(const [a,b,h] of hw){ for(let m=a;m<b;m+=h) out.push(m); } return out;
+}
+function posAt(dir,d){
+  const {pts,cum}=dir; let i=1; while(i<cum.length-1 && cum[i]<d) i++;
+  const seg=cum[i]-cum[i-1]||1, f=Math.min(1,Math.max(0,(d-cum[i-1])/seg));
+  const a=pts[i-1], b=pts[i];
+  return {ll:[a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f], hdg:bearing(a,b)};
+}
+const ease = f => f*f*(3-2*f);
+
+const ROUTES = [];
+for(const net of NETWORKS) for(const r of net.routes){
+  r.net = net.id;
+  r.dirs = [buildDirection(r, r.path), buildDirection(r, [...r.path].reverse())];
+  r.deps = departures(r.hw);
+  r.on = true;
+  ROUTES.push(r);
+}
+
+/* Boats active at minute t: {route, dirIdx, dep, ll, hdg, legIdx} */
+function boatsAt(t){
+  const out=[];
+  for(const r of ROUTES){
+    if(!r.on || !netOn[r.net]) continue;
+    r.dirs.forEach((dir,di)=>{
+      for(const base of [0,-1440]){
+        for(const dep0 of r.deps){
+          const dep=dep0+base, e=t-dep;
+          if(e<0 || e>=dir.dur) continue;
+          let k=0; while(k<dir.legs.length-1 && dir.legs[k].t1<=e) k++;
+          const L=dir.legs[k], f=L.t1>L.t0?ease((e-L.t0)/(L.t1-L.t0)):0;
+          const d=L.d0+(L.d1-L.d0)*f;
+          const p=posAt(dir, L.d1===L.d0 ? Math.max(0,d-1) : d);
+          out.push({r,di,dir,dep,e,leg:L,ll:L.d1===L.d0?posAt(dir,d).ll:p.ll,hdg:p.hdg,key:r.id+':'+di+':'+dep});
+        }
+      }
+    });
+  }
+  return out;
+}
+function countLive(r,t){
+  let n=0; for(const dir of r.dirs) for(const base of [0,-1440]) for(const dep of r.deps){ const e=t-dep-base; if(e>=0&&e<dir.dur) n++; } return n;
+}
+function nextDepartures(stopId, t, net, limit=6){
+  const rows=[];
+  for(const r of ROUTES){ if(r.net!==net) continue;
+    r.dirs.forEach(dir=>{
+      const s=dir.at.find(a=>a.id===stopId); if(!s || s.id===dir.to) return;
+      for(const base of [0,1440]) for(const dep of r.deps){ const tt=dep+base+s.t; if(tt>=t && tt<t+240) rows.push({r,dir,tt}); }
+    });
+  }
+  return rows.sort((a,b)=>a.tt-b.tt).slice(0,limit);
+}
+
+/* ------------------------------------------------------------------
+   Clock
+------------------------------------------------------------------- */
+function nycMinutes(){
+  const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'numeric',second:'numeric',hourCycle:'h23'}).formatToParts(new Date());
+  const g=k=>+p.find(x=>x.type===k).value; return g('hour')*60+g('minute')+g('second')/60;
+}
+function fmt(m){ m=((m%1440)+1440)%1440; let h=Math.floor(m/60), mm=Math.floor(m%60); const ap=h<12?'am':'pm'; h=h%12||12; return h+':'+String(mm).padStart(2,'0')+' '+ap; }
+const SPEEDS=[1,10,60,300];
+let simT=nycMinutes(), speed=60, playing=true, last=performance.now();
+const netOn={nycf:true, alt:false};
+try{ const s=JSON.parse(localStorage.getItem('ferry-sim')||'{}'); if(s.netOn) Object.assign(netOn,s.netOn); if(SPEEDS.includes(s.speed)) speed=s.speed; if(s.off) ROUTES.forEach(r=>{ if(s.off.includes(r.id)) r.on=false; }); }catch(e){}
+function save(){ try{ localStorage.setItem('ferry-sim',JSON.stringify({netOn,speed,off:ROUTES.filter(r=>!r.on).map(r=>r.id)})); }catch(e){} }
+
+/* ------------------------------------------------------------------
+   Map
+------------------------------------------------------------------- */
+const map=L.map('map',{zoomSnap:.25,attributionControl:true,preferCanvas:false}).setView([40.705,-73.985],12);
+let tiles=null;
+function isDark(){ const a=document.documentElement.dataset.theme; return a? a==='dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
+function setTiles(){
+  if(tiles) tiles.remove();
+  tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,className:isDark()?'tiles-dark':'tiles-light',attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+}
+setTiles();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ if(!document.documentElement.dataset.theme) setTiles(); });
+
+const netLayer={}, routeLine={};
+for(const net of NETWORKS){
+  const g=L.layerGroup(); netLayer[net.id]=g;
+  for(const r of net.routes){
+    const pts=r.dirs[0].pts;
+    const casing=L.polyline(pts,{color:'#fff',weight:7,opacity:.55,interactive:false});
+    const line=L.polyline(pts,{color:r.color,weight:4,opacity:.9,dashArray:net.id==='alt'?'2 7':null,lineCap:'round',lineJoin:'round'});
+    line.bindTooltip(r.name,{sticky:true});
+    routeLine[r.id]=L.layerGroup([casing,line]);
+  }
+  const seen=new Set();
+  for(const r of net.routes) for(const s of r.dirs[0].stops){ if(seen.has(s.id)) continue; seen.add(s.id);
+    const [nm,lat,lng]=STOPS[s.id];
+    const m=L.marker([lat,lng],{icon:L.divIcon({className:'',html:`<div class="stop${net.id==='alt'?' alt':''}"></div>`,iconSize:[12,12],iconAnchor:[6,6]}),zIndexOffset:500,title:nm});
+    m.bindPopup(()=>stopPopup(s.id,net.id),{autoPan:true});
+    m.on('popupopen',()=>openStop={m,id:s.id,net:net.id}); m.on('popupclose',()=>openStop=null);
+    g.addLayer(m);
+  }
+}
+const lineLayer=L.layerGroup().addTo(map), stopLayer=L.layerGroup().addTo(map), boatLayer=L.layerGroup().addTo(map);
+function applyLayers(){
+  lineLayer.clearLayers(); stopLayer.clearLayers();
+  for(const net of NETWORKS){ if(!netOn[net.id]) continue;
+    for(const r of net.routes) if(r.on) lineLayer.addLayer(routeLine[r.id]);
+    stopLayer.addLayer(netLayer[net.id]);
+  }
+  renderPanel(); save(); lastBoatKeys=null;
+}
+let openStop=null;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function stopPopup(id,net){
+  const rows=nextDepartures(id,simT,net);
+  const routes=[...new Set(ROUTES.filter(r=>r.net===net&&r.dirs[0].stops.some(s=>s.id===id)).map(r=>r))];
+  return `<div class="pop"><h3>${esc(STOPS[id][0])}</h3>
+    <div class="sub">${routes.map(r=>`<span class="tag" style="background:${r.color}">${esc(r.name)}</span>`).join('')}</div>
+    ${rows.length?`<table>${rows.map(x=>`<tr><td><span class="tag" style="background:${x.r.color}">${esc(x.r.id)}</span> to ${esc(STOPS[x.dir.to][0])}</td><td class="t">${fmt(x.tt)}<br><small style="color:var(--dim);font-weight:600">${Math.round(x.tt-simT)} min</small></td></tr>`).join('')}</table>`:'<div class="sub">No departures in the next 4 hours.</div>'}</div>`;
+}
+function boatPopup(b){
+  const e=b.e, dir=b.dir, nxt=dir.at.find(a=>a.t>e-0.01 && a.t>0) || dir.at[dir.at.length-1];
+  const dwelling = b.leg.stop && b.leg.d0===b.leg.d1;
+  const pct=Math.min(100,e/dir.dur*100);
+  return `<div class="pop"><h3><span class="tag" style="background:${b.r.color}">${esc(b.r.id)}</span>${esc(b.r.name)}</h3>
+    <div class="sub">${esc(STOPS[dir.from][0])} → ${esc(STOPS[dir.to][0])} · left ${fmt(b.dep)}</div>
+    <table>
+      <tr><td>${dwelling?'Docked at':'Next stop'}</td><td class="t">${esc(STOPS[dwelling?b.leg.stop:nxt.id][0])}</td></tr>
+      ${dwelling?'':`<tr><td>Arrives</td><td class="t">${fmt(b.dep+nxt.t)} · ${Math.max(0,Math.round(nxt.t-e))} min</td></tr>`}
+      <tr><td>Reaches ${esc(STOPS[dir.to][0])}</td><td class="t">${fmt(b.dep+dir.dur)}</td></tr>
+    </table>
+    <div class="bar"><i style="width:${pct}%;background:${b.r.color}"></i></div></div>`;
+}
+
+/* Boat markers, reused between frames by key */
+const boatMarkers=new Map(); let selKey=null, lastBoatKeys=null;
+function boatIcon(color,hdg,sel){
+  return L.divIcon({className:'',iconSize:[22,22],iconAnchor:[11,11],
+    html:`<div class="boat${sel?' sel':''}"><svg viewBox="0 0 24 24" style="transform:rotate(${hdg}deg)"><path d="M12 2.5c3 3 4.6 6.6 4.6 10.6V20a1.5 1.5 0 0 1-1.5 1.5H8.9A1.5 1.5 0 0 1 7.4 20v-6.9C7.4 9.1 9 5.5 12 2.5z" fill="${color}" stroke="#fff" stroke-width="1.6"/><rect x="9.6" y="11" width="4.8" height="5.5" rx="1" fill="#fff" opacity=".85"/></svg></div>`});
+}
+function drawBoats(){
+  const boats=boatsAt(simT), keys=new Set();
+  for(const b of boats){
+    keys.add(b.key);
+    let m=boatMarkers.get(b.key);
+    if(!m){
+      m=L.marker(b.ll,{icon:boatIcon(b.r.color,b.hdg,false),zIndexOffset:1000,keyboard:false});
+      m._hdg=b.hdg; m.bindPopup('',{autoPan:false,offset:[0,-6]});
+      m.on('popupopen',()=>{selKey=m._key; m.setPopupContent(boatPopup(m._b)); m.setIcon(boatIcon(m._b.r.color,m._hdg,true));});
+      m.on('popupclose',()=>{selKey=null; m.setIcon(boatIcon(m._b.r.color,m._hdg,false));});
+      m._key=b.key; boatMarkers.set(b.key,m); boatLayer.addLayer(m);
+    } else {
+      m.setLatLng(b.ll);
+      if(Math.abs(((b.hdg-m._hdg+540)%360)-180)>2 && !(b.leg.d0===b.leg.d1)){ m._hdg=b.hdg; const svg=m.getElement()?.querySelector('svg'); if(svg) svg.style.transform=`rotate(${b.hdg}deg)`; }
+    }
+    m._b=b;
+  }
+  for(const [k,m] of boatMarkers) if(!keys.has(k)){ boatLayer.removeLayer(m); boatMarkers.delete(k); }
+  // panel counts
+  for(const r of ROUTES){ const el=document.getElementById('ct-'+r.id); if(el){ const n=countLive(r,simT); el.textContent=n?`${n} boat${n>1?'s':''}`:'Not running'; el.classList.toggle('live',n>0);} }
+  for(const net of NETWORKS){ const el=document.getElementById('lc-'+net.id); if(el){ const n=net.routes.reduce((s,r)=>s+(r.on?countLive(r,simT):0),0); el.textContent=`${net.routes.length} routes · ${n} on the water`; } }
+}
+function refreshPopups(){
+  if(openStop && openStop.m.isPopupOpen()) openStop.m.setPopupContent(stopPopup(openStop.id,openStop.net));
+  const m=selKey&&boatMarkers.get(selKey); if(m&&m.isPopupOpen()) m.setPopupContent(boatPopup(m._b));
+}
+
+/* ------------------------------------------------------------------
+   Panel + controls
+------------------------------------------------------------------- */
+const $=id=>document.getElementById(id);
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function renderPanel(){
+  $('layers').innerHTML=NETWORKS.map(n=>`<button class="layer${netOn[n.id]?' on':''}" data-net="${n.id}" aria-pressed="${netOn[n.id]}"><span class="chk">${CHECK}</span><b>${esc(n.name)}</b><span id="lc-${n.id}">${esc(n.blurb)}</span></button>`).join('');
+  $('groups').innerHTML=NETWORKS.map(n=>`<div class="group${netOn[n.id]?'':' off'}"><h2>${esc(n.name)}</h2>${n.routes.map(r=>{
+    const st=r.dirs[0].stops; return `<button class="route${r.on?'':' muted'}" data-route="${r.id}" aria-pressed="${r.on}"><span class="sw" style="background:${r.color}"></span><span class="nm"><b>${esc(r.name)}</b><span>${esc(STOPS[st[0].id][0])} – ${esc(STOPS[st[st.length-1].id][0])} · ${Math.round(r.dirs[0].dur)} min</span></span><span class="ct" id="ct-${r.id}"></span></button>`;}).join('')}</div>`).join('');
+}
+$('layers').addEventListener('click',e=>{ const b=e.target.closest('[data-net]'); if(!b) return; netOn[b.dataset.net]=!netOn[b.dataset.net]; applyLayers(); drawBoats(); });
+$('groups').addEventListener('click',e=>{ const b=e.target.closest('[data-route]'); if(!b) return;
+  const r=ROUTES.find(x=>x.id===b.dataset.route);
+  if(e.detail===2 || e.altKey){ map.fitBounds(L.latLngBounds(r.dirs[0].pts),{padding:[40,40]}); return; }
+  r.on=!r.on; applyLayers(); drawBoats(); });
+
+const PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg>', PAUSE='<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></svg>';
+function renderPlay(){ $('play').innerHTML=playing?PAUSE:PLAY; $('play').setAttribute('aria-label',playing?'Pause':'Play'); }
+$('play').onclick=()=>{ playing=!playing; last=performance.now(); renderPlay(); };
+$('speed').innerHTML=SPEEDS.map(s=>`<button data-s="${s}">${s===1?'Live':s+'×'}</button>`).join('');
+function renderSpeed(){ $('speed').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.s===speed)); }
+$('speed').onclick=e=>{ const b=e.target.closest('[data-s]'); if(!b) return; speed=+b.dataset.s; if(speed===1){ simT=nycMinutes(); playing=true; renderPlay(); } renderSpeed(); save(); };
+$('now').onclick=()=>{ simT=nycMinutes(); tick(true); };
+$('scrub').addEventListener('input',e=>{ simT=+e.target.value; tick(true); });
+$('fit').onclick=fitAll;
+$('theme').onclick=()=>{ const r=document.documentElement; r.dataset.theme=isDark()?'light':'dark'; setTiles(); };
+$('handle').onclick=()=>$('panel').classList.toggle('min');
+if(matchMedia('(max-width:720px)').matches) $('panel').classList.add('min');
+
+function fitAll(){
+  const b=L.latLngBounds([]);
+  for(const r of ROUTES) if(r.on && netOn[r.net]) for(const p of r.dirs[0].pts) b.extend(p);
+  if(b.isValid()) map.fitBounds(b,{paddingTopLeft:[innerWidth>720?350:20,innerWidth>720?80:150],paddingBottomRight:[20,innerWidth>720?20:150],maxZoom:14});
+}
+
+/* ------------------------------------------------------------------
+   Loop
+------------------------------------------------------------------- */
+let lastUI=0, lastPop=0;
+function tick(force){
+  const now=performance.now(), dt=(now-last)/60000; last=now;
+  if(playing && !force) simT=(simT+dt*speed)%1440;
+  drawBoats();
+  if(force || now-lastUI>200){ lastUI=now;
+    $('time').firstChild.nodeValue=fmt(simT);
+    $('day').textContent=speed===1&&playing?'Live, New York time':`Simulated · ${speed}× speed`;
+    if(document.activeElement!==$('scrub')) $('scrub').value=Math.floor(simT);
+  }
+  if(force || now-lastPop>1000){ lastPop=now; refreshPopups(); }
+}
+let lastFrame=0;
+function loop(ts){ if(ts-lastFrame>33){ lastFrame=ts; tick(false); } requestAnimationFrame(loop); }
+renderPlay(); renderSpeed(); applyLayers(); fitAll(); tick(true); requestAnimationFrame(loop);
+</script>
+</body>
+</html>
